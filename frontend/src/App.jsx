@@ -242,9 +242,9 @@ export default function App() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#9ca3af' }}>
                     <span style={{ color: '#f87171', fontWeight: 'bold' }}>⛔ PROTECTED FILES:</span>
                   </div>
-                  <code style={{ fontSize: '0.75rem', color: '#93c5fd' }}>• project/backend/app/main.py</code>
-                  <code style={{ fontSize: '0.75rem', color: '#93c5fd' }}>• project/package.json, requirements.txt</code>
-                  <code style={{ fontSize: '0.75rem', color: '#93c5fd' }}>• project/docs/architecture.md</code>
+                  <code style={{ fontSize: '0.75rem', color: '#93c5fd' }}>• backend/app/main.py</code>
+                  <code style={{ fontSize: '0.75rem', color: '#93c5fd' }}>• package.json, requirements.txt</code>
+                  <code style={{ fontSize: '0.75rem', color: '#93c5fd' }}>• docs/architecture.md</code>
                 </div>
               </div>
             </div>
