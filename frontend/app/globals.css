@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens (Tailwind v4 @theme) ─────────────────────────────────── */
+@theme inline {
+  /* Primary — Ink */
+  --color-ink-50:  #F6F7FA;
+  --color-ink-100: #ECEEF3;
+  --color-ink-200: #D3D7E3;
+  --color-ink-300: #A7AFC6;
+  --color-ink-400: #7580A0;
+  --color-ink-500: #4C577A;
+  --color-ink-600: #333D5C;
+  --color-ink-700: #232B45;
+  --color-ink-800: #161B2E;
+  --color-ink-900: #0F1322;
+  --color-ink-950: #0B1220;
+
+  /* Neutral — Paper */
+  --color-paper-50:  #FFFFFF;
+  --color-paper-100: #FCFAF6;
+  --color-paper-200: #FAF8F4;
+  --color-paper-300: #F1EDE4;
+  --color-paper-400: #E4DDCF;
+  --color-paper-500: #CFC6B4;
+  --color-paper-600: #B0A48D;
+  --color-paper-700: #8C816C;
+  --color-paper-800: #635A49;
+  --color-paper-900: #3D372C;
+  --color-paper-950: #241F19;
+
+  /* Accent — Amber */
+  --color-amber-50:  #FFF8EC;
+  --color-amber-100: #FEEFD2;
+  --color-amber-200: #FCDCA0;
+  --color-amber-300: #F8C266;
+  --color-amber-400: #F0A83C;
+  --color-amber-500: #C6841F;
+  --color-amber-600: #A66A16;
+  --color-amber-700: #825213;
+  --color-amber-800: #5E3B10;
+  --color-amber-900: #3D260B;
+  --color-amber-950: #241608;
+
+  /* Semantic */
+  --color-status-success:   #4B7A5E;
+  --color-status-pending:   #C6841F;
+  --color-status-attention: #B4543D;
+  --color-status-line:      #D3D7E3;
+
+  /* Font Families */
+  --font-display: "Times New Roman", Georgia, "Palatino Linotype", serif;
+  --font-body:    "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono:    ui-monospace, "Cascadia Code", monospace;
+
+  /* Font Sizes */
+  --font-size-xs:   0.8125rem;
+  --font-size-sm:   0.9375rem;
+  --font-size-base: 1.0625rem;
+  --font-size-lg:   1.25rem;
+  --font-size-xl:   1.625rem;
+  --font-size-2xl:  2.125rem;
+  --font-size-3xl:  2.75rem;
+  --font-size-4xl:  3.5rem;
+
+  /* Spacing */
+  --spacing-section: 6rem;
+  --spacing-section-lg: 8rem;
+
+  /* Radius */
+  --radius-sm:   0.25rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(11 18 32 / 0.04);
+  --shadow-md: 0 4px 10px -2px rgb(11 18 32 / 0.08);
+  --shadow-lg: 0 12px 24px -6px rgb(11 18 32 / 0.10);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #FAF8F4;
+  color: #0B1220;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Marquee Animation ──────────────────────────────────────────────────── */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+  will-change: transform;
+}
+
+.marquee-wrapper:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none !important;
+  }
+  .marquee-wrapper {
+    overflow: hidden;
+  }
+}
+
+/* ─── Progress Bar Animation ─────────────────────────────────────────────── */
+@keyframes progress-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+.progress-bar-active {
+  animation: progress-fill var(--progress-duration, 7s) linear forwards;
+}
+
+/* ─── Status Feed Stagger ────────────────────────────────────────────────── */
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feed-item {
+  opacity: 0;
+  animation: slide-up-fade 0.5s ease forwards;
+}
+
+/* ─── Showcase Visual Transitions ───────────────────────────────────────── */
+@keyframes visual-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.visual-panel-enter {
+  animation: visual-enter 0.35s ease forwards;
+}
+
+/* ─── Scroll-triggered: prefers-reduced-motion ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar-active,
+  .feed-item,
+  .visual-panel-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

@@ -4,10 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev:frontend": "vite frontend",
+    "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "uvicorn backend.app.main:app --reload",
-    "build:frontend": "vite build frontend",
-    "preview:frontend": "vite preview frontend"
+    "build:frontend": "npm --prefix frontend run build",
+    "start:frontend": "npm --prefix frontend run start",
+    "lint:frontend": "npm --prefix frontend run lint"
   },
   "dependencies": {
     "react": "^18.2.0",
