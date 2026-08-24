@@ -1,0 +1,49 @@
+# Cloud Build configuration for Hazela Agent Core
+# Builds Docker image and deploys to Cloud Run (asia-south1)
+# Trigger: push to feature/agent-core branch
+
+steps:
+  # Step 1: Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/hazela-agent-core:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/hazela-agent-core:latest'
+      - '-f'
+      - 'backend/Dockerfile'
+      - 'backend'
+
+  # Step 2: Push to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'gcr.io/$PROJECT_ID/hazela-agent-core'
+
+  # Step 3: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'hazela-agent-core'
+      - '--image=gcr.io/$PROJECT_ID/hazela-agent-core:$COMMIT_SHA'
+      - '--region=asia-south1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--min-instances=0'    # scale to zero when idle (cost control)
+      - '--max-instances=3'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=60s'
+      - '--set-env-vars=ENVIRONMENT=production'
+      - '--set-secrets=GEMINI_API_KEY=hazela-gemini-key:latest,GOOGLE_CLOUD_PROJECT=hazela-gcp-project:latest'
+
+images:
+  - 'gcr.io/$PROJECT_ID/hazela-agent-core:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/hazela-agent-core:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

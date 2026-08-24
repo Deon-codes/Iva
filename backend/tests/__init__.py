@@ -1,1 +1,1 @@
-# Tests package skeleton
+"""Tests package."""

@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.env
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store
+*.swp
+# Service account keys — never bake into image
+*service-account*.json
+*service_account*.json
+*-key.json
+*credentials*.json

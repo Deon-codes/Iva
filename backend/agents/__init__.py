@@ -1,1 +1,1 @@
-# Agents package skeleton
+"""Hazela agents package."""

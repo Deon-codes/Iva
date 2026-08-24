@@ -1,1 +1,1 @@
-# Routes package skeleton
+"""Routes package."""

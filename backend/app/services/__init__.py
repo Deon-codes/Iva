@@ -1,1 +1,1 @@
-# Services package skeleton
+"""Services package."""

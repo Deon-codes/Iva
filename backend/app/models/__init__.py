@@ -1,1 +1,1 @@
-# Models package skeleton
+"""Models package."""
