@@ -51,12 +51,23 @@ export default function Nav() {
         </a>
 
         {/* Nav links */}
-        <nav style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
           <a href="#how-it-works" className="nav-link" style={navLinkStyle}>How it works</a>
           <a href="#features" className="nav-link" style={navLinkStyle}>Features</a>
           <a href="#trust" className="nav-link" style={navLinkStyle}>About</a>
           <a
-            href="#get-started"
+            href="/login"
+            style={{
+              ...navLinkStyle,
+              color: "#0B1220",
+              fontWeight: 600,
+              padding: "0.5rem 1rem",
+            }}
+          >
+            Sign In
+          </a>
+          <a
+            href="/signup"
             style={{
               background: "#C6841F",
               color: "#fff",
@@ -75,6 +86,7 @@ export default function Nav() {
             Get Started
           </a>
         </nav>
+
       </div>
     </header>
   );

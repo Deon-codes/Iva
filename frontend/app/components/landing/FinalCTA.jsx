@@ -41,7 +41,7 @@ export default function FinalCTA() {
 
         {/* CTA */}
         <a
-          href="#"
+          href="/signup"
           style={{
             display: "inline-block",
             background: "#C6841F",

@@ -89,7 +89,7 @@ export default function Hero() {
         >
           <a
             id="get-started"
-            href="#get-started-final"
+            href="/signup"
             style={{
               display: "inline-block",
               background: "#C6841F",
@@ -103,6 +103,7 @@ export default function Hero() {
               boxShadow: "0 4px 14px -2px rgba(198,132,31,0.35)",
               transition: "background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease",
             }}
+
             onMouseEnter={e => {
               e.currentTarget.style.background = "#A66A16";
               e.currentTarget.style.transform = "translateY(-1px)";
