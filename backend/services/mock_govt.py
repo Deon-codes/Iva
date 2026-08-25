@@ -12,7 +12,7 @@ from typing import Optional, TypedDict
 
 
 class GovStatusResponse(TypedDict):
-    status: str  # e.g. "under_review" | "approved" | "rejected"
+    status: str
     reason: Optional[str]
 
 
@@ -20,12 +20,10 @@ _MOCK_DB: dict[str, GovStatusResponse] = {}
 
 
 def seed(application_id: str, status: str, reason: Optional[str] = None) -> None:
-    """Test/demo helper to set or change what the mock portal reports."""
     _MOCK_DB[application_id] = {"status": status, "reason": reason}
 
 
 def get_application_status(application_id: str) -> GovStatusResponse:
-    """Equivalent of GET /mock-government/applications/{id}."""
     if application_id not in _MOCK_DB:
         return {"status": "under_review", "reason": None}
     return _MOCK_DB[application_id]

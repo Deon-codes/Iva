@@ -1,10 +1,9 @@
 """
 Status Agent (Person 4 / feature/status-documents)
 
-Owns the async, background half of the platform: this is what makes the
-system "keep working after the user leaves." Designed to be called by a
-Cloud Scheduler -> Cloud Run job, but is a plain function so it's trivial
-to unit test and run locally without any cloud plumbing.
+Owns the async, background half of the platform. Designed to be called
+by a Cloud Scheduler -> Cloud Run job, but is a plain function so it's
+trivial to unit test and run locally without any cloud plumbing.
 
 Flow per application:
     1. Poll the mock government portal for current status.
@@ -12,17 +11,16 @@ Flow per application:
     3. If unchanged -> no-op (idempotent).
     4. If changed:
         a. Validate + apply the state transition.
-        b. If rejected, ask Gemini to explain the reason in plain
-           language (never inventing a reason not given to it) and
-           propose a next action.
+        b. If rejected or action_required, ask Gemini to explain the
+           reason in plain language (never inventing a reason not
+           given to it), propose a next action, and build a concrete
+           correction draft when the issue is fixable.
         c. Store a StatusEvent (event timeline / dedupe key).
         d. Create a user notification.
-    5. Return the event (or None if nothing changed) so callers/tests
-       can assert on it without hitting any store.
+    5. Return the event (or None if nothing changed).
 
 Gemini calls are isolated behind `_explain_rejection` so this module
-runs fully offline (deterministic fallback) if no API key is configured
-— useful for CI and for the rest of the team before Day 3.
+runs fully offline (deterministic fallback) if no API key is configured.
 """
 
 from __future__ import annotations
@@ -34,6 +32,7 @@ from typing import Optional
 from models.application import (
     Application,
     ApplicationStatus,
+    CorrectionDraft,
     InvalidTransitionError,
     StatusEvent,
 )
@@ -41,12 +40,9 @@ from services import mock_govt, notif
 
 logger = logging.getLogger("status_agent")
 
-# In-memory application + event stores for the hackathon.
-# Swap for Firestore reads/writes without changing the function bodies below.
 _APPLICATIONS: dict[str, Application] = {}
 _EVENTS: dict[str, list[StatusEvent]] = {}
 
-# Maps the mock portal's raw status strings to our internal enum.
 _GOV_STATUS_MAP: dict[str, ApplicationStatus] = {
     "under_review": ApplicationStatus.UNDER_REVIEW,
     "action_required": ApplicationStatus.ACTION_REQUIRED,
@@ -54,17 +50,31 @@ _GOV_STATUS_MAP: dict[str, ApplicationStatus] = {
     "rejected": ApplicationStatus.REJECTED,
 }
 
-# Deterministic fallbacks for common rejection reasons — used if Gemini is
-# unavailable, and as the "no invented reasons" ground truth for prompting.
-_KNOWN_REJECTION_ACTIONS: dict[str, str] = {
-    "income certificate expired": "Upload a renewed income certificate.",
-    "document mismatch": "Confirm the name on your documents matches your application, then re-upload.",
-    "missing document": "Upload the missing document listed in your application.",
+# Ground truth for known, fixable rejection/action reasons: the plain
+# instruction AND (where relevant) which document needs re-uploading.
+# This drives both the deterministic fallback explanation and the
+# correction draft — Gemini never invents beyond this.
+_KNOWN_ISSUES: dict[str, dict[str, Optional[str]]] = {
+    "income certificate expired": {
+        "instructions": "Upload a renewed income certificate.",
+        "document_to_reupload": "income_certificate",
+    },
+    "document mismatch": {
+        "instructions": "Confirm the name on your documents matches your application, then re-upload.",
+        "document_to_reupload": None,
+    },
+    "missing document": {
+        "instructions": "Upload the missing document listed in your application.",
+        "document_to_reupload": None,
+    },
+    "missing caste certificate": {
+        "instructions": "Upload your caste certificate.",
+        "document_to_reupload": "caste_certificate",
+    },
 }
 
 
 def register_application(app: Application) -> None:
-    """Test/demo helper — normally the application already exists in the store."""
     _APPLICATIONS[app.id] = app
     _EVENTS.setdefault(app.id, [])
 
@@ -78,11 +88,8 @@ def get_events(application_id: str) -> list[StatusEvent]:
 
 
 def check_application_status(application_id: str) -> Optional[StatusEvent]:
-    """
-    Entry point for the scheduled job. Safe to call repeatedly — a
-    no-op if the government portal hasn't reported a change since the
-    last check (idempotent, so retries/duplicate triggers are harmless).
-    """
+    """Entry point for the scheduled job. Safe to call repeatedly — a
+    no-op if the government portal hasn't reported a change."""
     application = _APPLICATIONS.get(application_id)
     if application is None:
         logger.warning("check_application_status: unknown application_id=%s", application_id)
@@ -93,8 +100,7 @@ def check_application_status(application_id: str) -> Optional[StatusEvent]:
     if new_status is None:
         logger.warning(
             "check_application_status: unrecognized gov status '%s' for app=%s",
-            gov_response["status"],
-            application_id,
+            gov_response["status"], application_id,
         )
         return None
 
@@ -116,14 +122,17 @@ def check_application_status(application_id: str) -> Optional[StatusEvent]:
     reason = gov_response.get("reason")
     explanation: Optional[str] = None
     next_action: Optional[str] = None
+    correction_draft: Optional[CorrectionDraft] = None
 
     if new_status == ApplicationStatus.REJECTED:
         application.rejection_reason = reason
         explanation, next_action = _explain_rejection(reason)
         application.next_action = next_action
+        correction_draft = _build_correction_draft(application_id, reason)
     elif new_status == ApplicationStatus.ACTION_REQUIRED:
-        next_action = reason or "Please review your application for required updates."
+        next_action = _lookup_instructions(reason) or reason or "Please review your application for required updates."
         application.next_action = next_action
+        correction_draft = _build_correction_draft(application_id, reason)
 
     event = StatusEvent.new(
         application_id=application_id,
@@ -133,6 +142,7 @@ def check_application_status(application_id: str) -> Optional[StatusEvent]:
         reason=reason,
         explanation=explanation,
         next_action=next_action,
+        correction_draft=correction_draft,
     )
     _EVENTS.setdefault(application_id, []).append(event)
 
@@ -145,40 +155,62 @@ def check_application_status(application_id: str) -> Optional[StatusEvent]:
     return event
 
 
+def _lookup_instructions(reason: Optional[str]) -> Optional[str]:
+    if not reason:
+        return None
+    entry = _KNOWN_ISSUES.get(reason.strip().lower())
+    return entry["instructions"] if entry else None
+
+
 def _explain_rejection(reason: Optional[str]) -> tuple[str, str]:
-    """
-    Turn a raw rejection reason into a plain-language explanation + a
-    concrete next action. Reason is always grounded in what the mock
-    portal actually returned — Gemini is instructed to explain it, not
-    invent one.
-    """
+    """Plain-language explanation + next action. Reason is always
+    grounded in what the mock portal actually returned."""
     if not reason:
         return (
             "Your application was rejected but no specific reason was provided by the portal.",
             "Contact support or resubmit your application for review.",
         )
 
-    known_action = _KNOWN_REJECTION_ACTIONS.get(reason.strip().lower())
-
+    known_instructions = _lookup_instructions(reason)
     gemini_explanation = _call_gemini_for_explanation(reason)
     if gemini_explanation:
-        return gemini_explanation, known_action or "Review and correct the issue, then resubmit."
+        return gemini_explanation, known_instructions or "Review and correct the issue, then resubmit."
 
-    # Deterministic fallback if Gemini isn't configured (keeps this module
-    # runnable offline for the rest of the team before Day 3).
     return (
         f"Your application was rejected. Reason given by the portal: {reason}.",
-        known_action or "Review and correct the issue, then resubmit.",
+        known_instructions or "Review and correct the issue, then resubmit.",
+    )
+
+
+def _build_correction_draft(application_id: str, reason: Optional[str]) -> Optional[CorrectionDraft]:
+    """
+    Turns a known, fixable issue into something the user can actually
+    act on — not just a sentence, but which document to re-upload (if
+    any). Only built for reasons we recognize; unknown reasons get
+    fixable=False so the frontend can route to manual support instead
+    of pretending there's a one-click fix.
+    """
+    if not reason:
+        return None
+
+    entry = _KNOWN_ISSUES.get(reason.strip().lower())
+    if entry is None:
+        return CorrectionDraft(
+            application_id=application_id,
+            fixable=False,
+            instructions="This issue isn't automatically resolvable. Please contact support.",
+        )
+
+    return CorrectionDraft(
+        application_id=application_id,
+        fixable=True,
+        instructions=entry["instructions"],
+        document_to_reupload=entry["document_to_reupload"],
     )
 
 
 def _call_gemini_for_explanation(reason: str) -> Optional[str]:
-    """
-    Isolated Gemini call. Returns None (triggering the deterministic
-    fallback above) if no API key is configured or the call fails, so
-    the rest of the pipeline never hard-depends on Gemini being up.
-    """
-    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY_HZ")
+    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
     if not api_key:
         return None
 
@@ -198,7 +230,7 @@ def _call_gemini_for_explanation(reason: str) -> Optional[str]:
         response = model.generate_content(prompt)
         text = (response.text or "").strip()
         return text or None
-    except Exception:  # noqa: BLE001 — any SDK/network failure just falls back
+    except Exception:  # noqa: BLE001
         logger.exception("Gemini explanation call failed; using deterministic fallback")
         return None
 
@@ -222,7 +254,6 @@ def _notify_for_status_change(application: Application, event: StatusEvent) -> N
 
 
 if __name__ == "__main__":
-    # Quick manual smoke test — run with: python -m backend.agents.status_agent
     logging.basicConfig(level=logging.INFO)
 
     app = Application(id="app_001", user_id="user_001", scheme_id="scheme_001",

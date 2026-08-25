@@ -1,72 +1,80 @@
 """
-Document routes — Person 4 ownership.
-
-Mount in your main app with:
-    from routes.doc import router as doc_router
-    app.include_router(doc_router)
+Document routes — upload metadata, list a user's documents, and check
+document match status against a scheme's requirements.
 """
 
 from __future__ import annotations
 
-from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from models.document import Document, DocumentMatchResult, DocumentType, ExpiryCheckResult
+from models.document import Document, DocumentMatchResult, DocumentStatus, DocumentType
 from services import doc_service
 
-router = APIRouter(prefix="/documents", tags=["documents"])
+router = APIRouter()
 
 
-class UploadDocumentRequest(BaseModel):
-    userId: str
+class CreateDocumentRequest(BaseModel):
+    id: str
+    user_id: str
     type: DocumentType
-    # Synthetic/mock "extracted" fields — simulates what OCR/Gemini would
-    # produce, so the demo doesn't depend on real file parsing.
     name: Optional[str] = None
-    issueDate: Optional[str] = None  # "YYYY-MM-DD"
-    expiryDate: Optional[str] = None  # "YYYY-MM-DD"
-    extraFields: dict = {}
-    sourceFilename: Optional[str] = None
+    issue_date: Optional[str] = None   # ISO date, e.g. "2025-04-01"
+    expiry_date: Optional[str] = None  # ISO date; omit if it doesn't expire
+
+
+class DocumentResponse(BaseModel):
+    id: str
+    user_id: str
+    type: DocumentType
+    name: Optional[str]
+    issue_date: Optional[str]
+    expiry_date: Optional[str]
+    status: DocumentStatus
+
+    @staticmethod
+    def from_document(doc: Document) -> "DocumentResponse":
+        return DocumentResponse(
+            id=doc.id, user_id=doc.user_id, type=doc.type, name=doc.name,
+            issue_date=doc.issue_date, expiry_date=doc.expiry_date, status=doc.status,
+        )
 
 
 class MatchDocumentsRequest(BaseModel):
-    userId: str
-    required: list[str]
+    user_id: str
+    required: list[DocumentType]
+    deadline: Optional[str] = None  # ISO date; the scheme's actual deadline, if known
 
 
-@router.post("/upload", response_model=Document)
-def upload_document(payload: UploadDocumentRequest):
-    raw_metadata = {
-        "name": payload.name,
-        "issueDate": payload.issueDate,
-        "expiryDate": payload.expiryDate,
-        **payload.extraFields,
-    }
-    doc = doc_service.upload_document(
-        user_id=payload.userId,
-        doc_type=payload.type,
-        raw_metadata=raw_metadata,
-        source_filename=payload.sourceFilename,
+@router.post("/api/documents", response_model=DocumentResponse, status_code=201)
+def upload_document(payload: CreateDocumentRequest):
+    if doc_service.get_document(payload.user_id, payload.id) is not None:
+        raise HTTPException(status_code=409, detail="Document already exists")
+
+    document = Document(
+        id=payload.id,
+        user_id=payload.user_id,
+        type=payload.type,
+        name=payload.name,
+        issue_date=payload.issue_date,
+        expiry_date=payload.expiry_date,
     )
-    return doc
+    doc_service.create_document(document)
+    return DocumentResponse.from_document(document)
 
 
-@router.get("/{user_id}", response_model=list[Document])
-def list_user_documents(user_id: str):
-    return doc_service.get_user_documents(user_id)
+@router.get("/api/documents/{user_id}", response_model=list[DocumentResponse])
+def list_documents(user_id: str):
+    docs = doc_service.get_documents_for_user(user_id)
+    return [DocumentResponse.from_document(d) for d in docs]
 
 
-@router.post("/match", response_model=DocumentMatchResult)
+@router.post("/api/documents/match", response_model=DocumentMatchResult)
 def match_documents(payload: MatchDocumentsRequest):
-    return doc_service.match_documents(payload.userId, payload.required)
-
-
-@router.get("/{doc_id}/expiry-check", response_model=ExpiryCheckResult)
-def expiry_check(doc_id: str, deadline: Optional[date] = None):
-    try:
-        return doc_service.check_expiry(doc_id, deadline=deadline)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    return doc_service.match_documents(
+        user_id=payload.user_id,
+        required=payload.required,
+        deadline=payload.deadline,
+    )

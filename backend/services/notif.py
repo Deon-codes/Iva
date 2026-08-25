@@ -18,7 +18,7 @@ class Notification:
     application_id: str
     user_id: str
     message: str
-    kind: str  # "status_change" | "action_required" | "deadline_approaching" | "document_expired"
+    kind: str
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 

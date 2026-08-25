@@ -25,7 +25,6 @@ class ApplicationStatus(str, Enum):
     REJECTED = "rejected"
 
 
-# Explicit allow-list of transitions. Anything not listed here is invalid.
 VALID_TRANSITIONS: dict[ApplicationStatus, set[ApplicationStatus]] = {
     ApplicationStatus.DRAFT: {ApplicationStatus.READY_FOR_REVIEW},
     ApplicationStatus.READY_FOR_REVIEW: {ApplicationStatus.OTP_REQUIRED, ApplicationStatus.DRAFT},
@@ -72,6 +71,21 @@ class Application:
 
 
 @dataclass
+class CorrectionDraft:
+    """
+    A concrete, actionable correction the user can act on — the spec's
+    'if fixable, prepare correction draft' requirement. This is more
+    than a next_action string: it names exactly what needs to change.
+    """
+
+    application_id: str
+    fixable: bool
+    instructions: str
+    document_to_reupload: Optional[str] = None  # DocumentType.value, if applicable
+    fields_to_update: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
 class StatusEvent:
     """An immutable record of a status change, used for the event timeline
     and to make status-change detection idempotent (dedupe on gov_status_raw)."""
@@ -84,6 +98,7 @@ class StatusEvent:
     reason: Optional[str]
     explanation: Optional[str]
     next_action: Optional[str]
+    correction_draft: Optional[CorrectionDraft] = None
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     @staticmethod
@@ -95,6 +110,7 @@ class StatusEvent:
         reason: Optional[str] = None,
         explanation: Optional[str] = None,
         next_action: Optional[str] = None,
+        correction_draft: Optional[CorrectionDraft] = None,
     ) -> "StatusEvent":
         return StatusEvent(
             id=str(uuid.uuid4()),
@@ -105,4 +121,5 @@ class StatusEvent:
             reason=reason,
             explanation=explanation,
             next_action=next_action,
+            correction_draft=correction_draft,
         )
