@@ -15,7 +15,7 @@ don't merge this into backend/main.py yourself; hand your router
 
 from fastapi import FastAPI
 
-from routes.status_routes import router as status_router
+from routes.status_route import router as status_router
 
 app = FastAPI(title="Status & Documents — dev server")
 app.include_router(status_router)

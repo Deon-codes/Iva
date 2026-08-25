@@ -31,13 +31,13 @@ import logging
 import os
 from typing import Optional
 
-from backend.models.application import (
+from models.application import (
     Application,
     ApplicationStatus,
     InvalidTransitionError,
     StatusEvent,
 )
-from backend.services import mock_government_portal, notifications
+from services import mock_govt, notif
 
 logger = logging.getLogger("status_agent")
 
@@ -88,7 +88,7 @@ def check_application_status(application_id: str) -> Optional[StatusEvent]:
         logger.warning("check_application_status: unknown application_id=%s", application_id)
         return None
 
-    gov_response = mock_government_portal.get_application_status(application_id)
+    gov_response = mock_govt.get_application_status(application_id)
     new_status = _GOV_STATUS_MAP.get(gov_response["status"])
     if new_status is None:
         logger.warning(
@@ -213,7 +213,7 @@ def _notify_for_status_change(application: Application, event: StatusEvent) -> N
     else:
         message = f"Your application status changed to {event.new_status.value}."
 
-    notifications.create_notification(
+    notif.create_notification(
         application_id=application.id,
         user_id=application.user_id,
         message=message,
@@ -231,7 +231,7 @@ if __name__ == "__main__":
 
     print("No change yet:", check_application_status("app_001"))
 
-    mock_government_portal.seed("app_001", "rejected", "Income certificate expired")
+    mock_govt.seed("app_001", "rejected", "Income certificate expired")
     event = check_application_status("app_001")
     print("After rejection:", event)
-    print("Notifications:", notifications.list_notifications_for_user("user_001"))
+    print("Notifications:", notif.list_notifications_for_user("user_001"))

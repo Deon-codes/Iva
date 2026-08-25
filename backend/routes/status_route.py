@@ -18,9 +18,9 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.agents import status_agent
-from backend.models.application import Application, ApplicationStatus
-from backend.services import mock_government_portal, notifications
+from agents import status_agent
+from models.application import Application, ApplicationStatus
+from services import mock_govt, notif
 
 router = APIRouter()
 
@@ -147,7 +147,7 @@ def trigger_status_check(application_id: str):
 
 @router.get("/mock-government/applications/{application_id}")
 def get_mock_gov_status(application_id: str):
-    return mock_government_portal.get_application_status(application_id)
+    return mock_govt.get_application_status(application_id)
 
 
 @router.post("/mock-government/applications/{application_id}/seed", status_code=204)
@@ -157,7 +157,7 @@ def seed_mock_gov_status(application_id: str, payload: SeedGovStatusRequest):
     status. Call this, then POST /api/status/check/{id} to see the
     agent detect and react to it -- this is your demo's "Scene 8/9".
     """
-    mock_government_portal.seed(application_id, payload.status, payload.reason)
+    mock_govt.seed(application_id, payload.status, payload.reason)
 
 
 # ---------------------------------------------------------------------------
@@ -166,4 +166,4 @@ def seed_mock_gov_status(application_id: str, payload: SeedGovStatusRequest):
 
 @router.get("/api/notifications/{user_id}", response_model=list[NotificationResponse])
 def get_notifications(user_id: str):
-    return notifications.list_notifications_for_user(user_id)
+    return notif.list_notifications_for_user(user_id)
