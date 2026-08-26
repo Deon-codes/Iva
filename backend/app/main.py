@@ -22,6 +22,10 @@ def health_check():
     """Health check endpoint to verify backend status."""
     return {"status": "ok", "environment": os.getenv("ENVIRONMENT", "development")}
 
+# Register Voice Router
+from app.routes.voice import router as voice_router
+app.include_router(voice_router)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
