@@ -19,6 +19,10 @@ export function AppProvider({ children }) {
   // Chat input prefixing for context routing
   const [pendingPrompt, setPendingPrompt] = useState("");
 
+  // Bloub transition state
+  const [transitionTarget, setTransitionTarget] = useState(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
   // Guard: prevent refreshData from being called in a loop
   const fetchedRef = useRef(false);
 
@@ -122,7 +126,8 @@ export function AppProvider({ children }) {
       timestamp: "Just now"
     };
     setChatHistory(prev => [...prev, userMsg]);
-    setAgentState("Attentive");
+    // User submitted → agent is processing
+    setAgentState("Thinking");
 
     try {
       const res = await fetch("/api/chat", {
@@ -139,7 +144,12 @@ export function AppProvider({ children }) {
         const data = await res.json();
         // Append agent response
         setChatHistory(prev => [...prev, data.chatMessage]);
-        setAgentState(data.agentState || "Neutral");
+        const newState = data.agentState || "Neutral";
+        setAgentState(newState);
+        // Auto-transition back to Neutral after Excited/Confused/Suspicious
+        if (["Excited", "Confused", "Suspicious"].includes(newState)) {
+          setTimeout(() => setAgentState("Neutral"), 4000);
+        }
         
         // Sync modified states
         if (data.updatedApplications) setApplications(data.updatedApplications);
@@ -160,6 +170,8 @@ export function AppProvider({ children }) {
         }
       ]);
       setAgentState("Confused");
+      // Auto-transition back to Neutral after brief Confused display
+      setTimeout(() => setAgentState("Neutral"), 4000);
     }
   };
 
@@ -249,10 +261,27 @@ export function AppProvider({ children }) {
           }
         ]);
         setAgentState("Excited");
+        // Auto-transition back to Neutral after brief Excited display
+        setTimeout(() => setAgentState("Neutral"), 4000);
       }
     } catch (error) {
       console.error("Document upload error:", error);
     }
+  };
+
+  // Trigger Bloub transition before navigating to auth pages
+  const triggerTransition = (target) => {
+    if (isTransitioning) return; // Prevent double-clicks
+    setTransitionTarget(target);
+    setIsTransitioning(true);
+  };
+
+  const completeTransition = () => {
+    if (transitionTarget) {
+      router.push(transitionTarget);
+    }
+    setIsTransitioning(false);
+    setTransitionTarget(null);
   };
 
   return (
@@ -278,7 +307,11 @@ export function AppProvider({ children }) {
         updateApplication,
         uploadDocument,
         setAgentState,
-        refreshData
+        refreshData,
+        isTransitioning,
+        transitionTarget,
+        triggerTransition,
+        completeTransition
       }}
     >
       {children}

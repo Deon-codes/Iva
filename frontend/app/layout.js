@@ -1,6 +1,8 @@
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "./context/AppContext";
+import BloubTransition from "./components/BloubTransition";
+import NavigationInterceptor from "./components/NavigationInterceptor";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -29,6 +31,8 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <AppProvider>
+          <NavigationInterceptor />
+          <BloubTransition />
           {children}
         </AppProvider>
       </body>

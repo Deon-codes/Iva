@@ -66,6 +66,10 @@ export async function POST(request) {
       reply = "Done! I have updated your profile income range to match the certificate. The documents check is now green, and I have successfully prepared the application draft! You can see the updated status in the **Applications** tab. Please click 'Review' and provide your OTP consent to submit.";
       agentState = "Excited";
     }
+    else if (query.includes("scam") || query.includes("fraud") || query.includes("suspicious") || query.includes("fake") || query.includes("legitimate") || query.includes("verify scheme") || query.includes("is this real")) {
+      reply = "⚠️ I've flagged this as a potential concern. Several indicators suggest this scheme may not be legitimate: inconsistent official channels, unverifiable contact details, or requests for upfront payments. I recommend verifying through the official government portal or contacting your district education office before proceeding.";
+      agentState = "Suspicious";
+    }
     else if (query.includes("find") || query.includes("qualify") || query.includes("eligible") || query.includes("scholarship")) {
       reply = "Based on your profile, you qualify for 3 scholarships:\n\n1. **Post-Matric Scholarship for OBC Students, Maharashtra** (Tuition waiver, closes Sep 20)\n2. **Central Sector Scheme of Scholarship** (₹12,000/yr, active issue)\n3. **PM-YASASVI Post Matric Scholarship** (Fee waiver up to ₹2.5L/yr, closes Sep 25)\n\nI recommend preparing the OBC Post-Matric scholarship next. Would you like me to start preparing it?";
       agentState = "Excited";

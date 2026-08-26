@@ -59,7 +59,7 @@ function daysUntilExpiry(expiryDate) {
 
 export default function ChatPage() {
   const {
-    chatHistory, agentState, sendMessage,
+    chatHistory, agentState, sendMessage, setAgentState,
     pendingPrompt, setPendingPrompt,
     applications, documents, schemes, user,
   } = useApp();
@@ -278,7 +278,16 @@ export default function ChatPage() {
               <input
                 type="text"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  if (!thinking && agentState === "Neutral") setAgentState("Attentive");
+                }}
+                onFocus={() => {
+                  if (!thinking && agentState === "Neutral") setAgentState("Attentive");
+                }}
+                onBlur={() => {
+                  if (!input.trim() && agentState === "Attentive") setAgentState("Neutral");
+                }}
                 disabled={thinking}
                 placeholder={thinking ? "Agent is working…" : "Ask me anything…"}
                 style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: "0.9rem", color: C.text, fontFamily: "inherit", minWidth: 0 }}
