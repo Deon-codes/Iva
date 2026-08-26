@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 const AppContext = createContext();
@@ -18,6 +18,9 @@ export function AppProvider({ children }) {
   
   // Chat input prefixing for context routing
   const [pendingPrompt, setPendingPrompt] = useState("");
+
+  // Guard: prevent refreshData from being called in a loop
+  const fetchedRef = useRef(false);
 
   // Load session from localStorage if exists
   useEffect(() => {
@@ -54,10 +57,11 @@ export function AppProvider({ children }) {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user?.onboardingCompleted && !fetchedRef.current) {
+      fetchedRef.current = true;
       refreshData();
     }
-  }, [user]);
+  }, [user?.onboardingCompleted]);
 
   // Auth Operations
   const login = (name, phone) => {
@@ -85,6 +89,7 @@ export function AppProvider({ children }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("hazela_user");
+    fetchedRef.current = false;
     router.push("/");
   };
 
@@ -169,6 +174,26 @@ export function AppProvider({ children }) {
     router.push("/chat");
   };
 
+  const updateApplication = async (id, updates) => {
+    try {
+      const res = await fetch(`/api/applications/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setApplications((prev) => prev.map((a) => (a.id === id ? updated : a)));
+        return updated;
+      }
+    } catch (error) {
+      console.error("Application update error:", error);
+    }
+    setApplications((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, ...updates } : a))
+    );
+  };
+
   const prepareApplication = async (scheme) => {
     try {
       const res = await fetch("/api/applications", {
@@ -250,6 +275,7 @@ export function AppProvider({ children }) {
         askAgentAboutScheme,
         askAgentAboutApplication,
         prepareApplication,
+        updateApplication,
         uploadDocument,
         setAgentState,
         refreshData

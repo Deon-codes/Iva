@@ -1,91 +1,172 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { useApp } from "../context/AppContext";
 import { useRouter, usePathname } from "next/navigation";
 
+const NAV_ITEMS = [
+  { href: "/chat",         label: "Chat",         icon: "💬", desc: "Agent workspace" },
+  { href: "/explore",      label: "Explore",      icon: "🔍", desc: "Browse schemes" },
+  { href: "/applications", label: "Applications", icon: "📋", desc: "Track progress" },
+  { href: "/documents",    label: "Documents",    icon: "📄", desc: "Manage docs" },
+];
+
 export default function DashboardLayout({ children }) {
-  const { user, loading, logout } = useApp();
+  const { user, loading, logout, agentState } = useApp();
   const router = useRouter();
   const pathname = usePathname();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Route protection
   useEffect(() => {
     if (!loading) {
-      if (!user) {
-        router.push("/login");
-      } else if (!user.onboardingCompleted) {
-        router.push("/onboarding");
-      }
+      if (!user) router.push("/login");
+      else if (!user.onboardingCompleted) router.push("/onboarding");
     }
   }, [user, loading, router]);
 
+  useEffect(() => { setDrawerOpen(false); }, [pathname]);
+
   if (loading || !user || !user.onboardingCompleted) {
     return (
-      <div className="min-h-screen bg-paper-200 flex flex-col justify-center items-center font-body">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-sm text-ink-600">Syncing with agent workspace...</p>
+      <div style={{ minHeight: "100vh", background: "#E8F5E9", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div style={{ width: 36, height: 36, border: "3px solid #A5D6A7", borderTopColor: "#1B5E20", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <p style={{ marginTop: 16, fontSize: "0.875rem", color: "#2E7D32" }}>Syncing agent workspace...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
-  // Navigation link helper
-  const isTabActive = (path) => pathname === path;
-  const navLinkClass = (path) => 
-    `font-body text-sm font-semibold transition-all px-3 py-1.5 rounded-full ${
-      isTabActive(path) 
-        ? "bg-amber-100 text-amber-700" 
-        : "text-ink-600 hover:text-ink-950 hover:bg-paper-300"
-    }`;
+  const bloubSrc =
+    agentState === "Surprised"
+      ? "/bloub-suprised.svg"
+      : `/bloub-${(agentState || "neutral").toLowerCase()}.svg`;
+  const agentLabel = { Neutral: "Idle", Attentive: "Listening…", Excited: "Found match!", Confused: "Needs info", Suspicious: "Flagged", Sleepy: "Waiting", Surprised: "Unexpected" }[agentState] || "Idle";
 
-  return (
-    <div className="min-h-screen bg-paper-200 flex flex-col">
-      {/* Editorial Dashboard Top Bar */}
-      <header className="sticky top-0 z-40 bg-paper-50/90 backdrop-blur-md border-b border-ink-100 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          
-          {/* Logo */}
-          <div className="flex items-center gap-6">
-            <a href="/chat" className="font-display font-bold text-2xl text-ink-950 tracking-tight">
-              hazela
-            </a>
-            <span className="hidden sm:inline-block h-4 w-px bg-ink-200"></span>
-            <span className="hidden sm:inline-block text-xs font-semibold uppercase tracking-wider text-ink-400 font-body">
-              Agent Workspace
-            </span>
-          </div>
+  const Sidebar = ({ onClose }) => (
+    <aside style={{ width: 240, minWidth: 240, background: "#fff", borderRight: "1px solid #C8E6C9", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      {/* Logo */}
+      <div style={{ padding: "1.25rem 1.25rem 0.75rem", borderBottom: "1px solid #E8F5E9" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/chat" style={{ fontFamily: "serif", fontWeight: 800, fontSize: "1.5rem", color: "#1B5E20", textDecoration: "none", letterSpacing: "-0.02em" }}>
+            hazela
+          </Link>
+          {onClose && (
+            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "#66BB6A", lineHeight: 1 }}>✕</button>
+          )}
+        </div>
+        <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A5D6A7" }}>Agent Workspace</span>
+      </div>
 
-          {/* Center Tabs - Desktop */}
-          <nav className="flex items-center gap-1 sm:gap-2">
-            <a href="/chat" className={navLinkClass("/chat")}>Chat</a>
-            <a href="/explore" className={navLinkClass("/explore")}>Explore</a>
-            <a href="/applications" className={navLinkClass("/applications")}>Applications</a>
-            <a href="/documents" className={navLinkClass("/documents")}>Documents</a>
-          </nav>
-
-          {/* User Profile dropdown/status */}
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex flex-col items-end text-right">
-              <span className="text-xs font-bold text-ink-800 font-body">{user.name}</span>
-              <span className="text-[10px] text-green-600 font-semibold uppercase tracking-wider flex items-center gap-1 font-body">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                Agent Idle
-              </span>
-            </div>
-            
-            <button
-              onClick={logout}
-              className="text-xs font-semibold text-ink-500 hover:text-ink-950 border border-ink-200 hover:bg-paper-300 px-3 py-1.5 rounded-full transition-all font-body cursor-pointer"
-            >
-              Sign Out
-            </button>
+      {/* Bloub identity */}
+      <div style={{ padding: "1.25rem 1.25rem 1rem", borderBottom: "1px solid #E8F5E9", display: "flex", alignItems: "center", gap: "0.875rem" }}>
+        <div
+          className={`bloub bloub-${(agentState || "neutral").toLowerCase()}`}
+          style={{ width: 48, height: 48, overflow: "hidden", flexShrink: 0, background: "#E8F5E9" }}
+        >
+          <img
+            src={bloubSrc}
+            alt={`Bloub ${agentState}`}
+            width={48}
+            height={48}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            onError={(e) => { e.target.style.display = "none"; e.target.parentNode.style.background = "linear-gradient(135deg,#66BB6A,#1B5E20)"; }}
+          />
+        </div>
+        <div>
+          <div style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#1B5E20" }}>Bloub</div>
+          <div style={{ fontSize: "0.7rem", color: "#66BB6A", display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: agentState === "Suspicious" ? "#C62828" : agentState === "Attentive" ? "#66BB6A" : "#A5D6A7", display: "inline-block" }} />
+            {agentLabel}
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content Area */}
-      <main className="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
-        {children}
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: "0.75rem 0.75rem", overflowY: "auto" }}>
+        <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#A5D6A7", padding: "0 0.25rem 0.5rem" }}>Navigation</div>
+        {NAV_ITEMS.map(({ href, label, icon, desc }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`sidebar-item${active ? " active" : ""}`}
+              style={{ marginBottom: "0.25rem", flexDirection: "column", alignItems: "flex-start", gap: 1 }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: "0.625rem", width: "100%" }}>
+                <span style={{ fontSize: "1rem" }}>{icon}</span>
+                <span style={{ fontSize: "0.875rem", fontWeight: active ? 700 : 500 }}>{label}</span>
+              </span>
+              <span style={{ fontSize: "0.7rem", color: active ? "#2E7D32" : "#81C784", paddingLeft: "1.625rem" }}>{desc}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User section */}
+      <div style={{ padding: "0.875rem 1rem", borderTop: "1px solid #E8F5E9" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.625rem" }}>
+          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#66BB6A,#1B5E20)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: "0.875rem", flexShrink: 0 }}>
+            {(user.name || "U")[0].toUpperCase()}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#1B5E20", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name}</div>
+            <div style={{ fontSize: "0.7rem", color: "#66BB6A" }}>{user.phone || "Connected"}</div>
+          </div>
+        </div>
+        <button
+          onClick={logout}
+          style={{ width: "100%", padding: "0.5rem", borderRadius: "0.625rem", border: "1px solid #C8E6C9", background: "transparent", color: "#2E7D32", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "background 0.15s" }}
+          onMouseEnter={e => e.target.style.background = "#E8F5E9"}
+          onMouseLeave={e => e.target.style.background = "transparent"}
+        >
+          Sign Out
+        </button>
+      </div>
+    </aside>
+  );
+
+  return (
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", fontFamily: "'Plus Jakarta Sans', sans-serif", background: "#E8F5E9" }}>
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex" style={{ flexShrink: 0, height: "100vh", flexDirection: "column" }}>
+        <Sidebar />
+      </div>
+
+      {/* Mobile Hamburger Header */}
+      <div className="flex md:hidden" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "#fff", borderBottom: "1px solid #C8E6C9", height: 56, alignItems: "center", padding: "0 1rem", justifyContent: "space-between" }}>
+        <button onClick={() => setDrawerOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", gap: 4, padding: 4 }}>
+          <span style={{ width: 22, height: 2, background: "#1B5E20", borderRadius: 2, display: "block" }} />
+          <span style={{ width: 16, height: 2, background: "#1B5E20", borderRadius: 2, display: "block" }} />
+          <span style={{ width: 22, height: 2, background: "#1B5E20", borderRadius: 2, display: "block" }} />
+        </button>
+        <Link href="/chat" style={{ fontFamily: "serif", fontWeight: 800, fontSize: "1.25rem", color: "#1B5E20", textDecoration: "none" }}>hazela</Link>
+        <div className={`bloub bloub-${(agentState || "neutral").toLowerCase()}`} style={{ width: 32, height: 32, overflow: "hidden", background: "#E8F5E9" }}>
+          <img src={bloubSrc} alt="Bloub" width={32} height={32} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.target.style.display = "none"; e.target.parentNode.style.background = "linear-gradient(135deg,#66BB6A,#1B5E20)"; }} />
+        </div>
+      </div>
+
+      {/* Mobile Drawer */}
+      {drawerOpen && (
+        <>
+          <div className="mobile-overlay" onClick={() => setDrawerOpen(false)} />
+          <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 280, zIndex: 50, display: "flex", flexDirection: "column" }}>
+            <Sidebar onClose={() => setDrawerOpen(false)} />
+          </div>
+        </>
+      )}
+
+      {/* Main Content */}
+      <main style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        {/* Mobile top spacer */}
+        <div className="flex md:hidden" style={{ height: 56, flexShrink: 0 }} />
+        {/* Content */}
+        <div style={{ flex: 1, overflow: "auto" }}>
+          {children}
+        </div>
       </main>
     </div>
   );
 }
+

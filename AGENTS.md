@@ -1,25 +1,13 @@
 # AGENTS.md — Person 2
-# Frontend + User API / User Experience
-## EXECUTION PRIORITY
+# Frontend + User API / Agentic User Experience
 
-This file defines responsibilities and constraints; it is NOT a command to implement every feature immediately.
-
-Only work on the specific task requested by the user in the current session.
-
-Do not proactively implement future features, redesign unrelated pages, refactor unrelated code, or perform extra work simply because it is described elsewhere in this file.
-
-If the user has not asked for implementation of a section, leave it alone.
-
-When the requested task is complete and verified, STOP.
 ## 1. ROLE
 
 You are responsible for the **frontend and frontend-facing API integration layer** of the Agentic Government Schemes & Scholarships Platform.
 
-You are NOT only a UI developer.
-
 You own:
 
-- React / Next.js frontend
+- Next.js / React frontend
 - Authenticated user experience
 - Onboarding
 - Chat / Agent interface
@@ -32,32 +20,54 @@ You own:
 - Frontend validation
 - Loading/error/empty states
 - Frontend tests
+- Agentic visual states and interactions
 
-You do NOT own the central ADK agent architecture.
+You do NOT own:
 
-You do NOT own the IVR system.
-
-You do NOT own the asynchronous status-monitoring engine.
+- Central ADK agent architecture
+- Core Gemini orchestration
+- IVR / telephony system
+- Async status-monitoring engine
+- Real government portal automation
 
 ---
 
-# 2. PROJECT CONTEXT
+# 2. EXECUTION PRIORITY
+
+This file defines responsibilities and constraints.
+
+It is NOT an instruction to implement every feature immediately.
+
+Only work on the specific task requested by the user in the current session.
+
+Do NOT proactively:
+- redesign unrelated pages
+- implement future features
+- refactor unrelated code
+- create unnecessary architecture
+- perform speculative improvements
+- repeatedly inspect the repository
+- repeatedly run Git commands
+
+When the requested task is complete and verified, STOP.
+
+---
+
+# 3. PROJECT CONTEXT
 
 The product is an **Agentic Government Schemes & Scholarships Platform**.
 
-The goal is not simply to tell users about scholarships.
-
-The agent should help the user:
+The agent helps users:
 
 1. Discover relevant schemes/scholarships
-2. Check eligibility
+2. Understand eligibility
 3. Verify legitimacy
 4. Check required documents
 5. Prepare applications
 6. Fill application forms
-7. Stop at human-controlled OTP/identity verification
+7. Stop at human-controlled OTP / identity verification
 8. Track applications asynchronously
-9. Explain status changes or rejection reasons
+9. Explain rejection/status changes
 10. Tell the user when action is required
 
 The core philosophy is:
@@ -66,176 +76,488 @@ The core philosophy is:
 
 The frontend must make this obvious.
 
+This should NOT feel like:
+
+> "A government website with an AI chatbot."
+
+It should feel like:
+
+> "An agent is working for me."
+
 ---
 
-# 3. IMPORTANT: EXISTING LANDING PAGE
+# 4. EXISTING LANDING PAGE
 
-An initial landing page has ALREADY been created.
+An initial landing page has already been created.
 
-## DO NOT redesign or replace the existing landing page.
+## DO NOT redesign or replace it.
 
-The existing landing page is intentionally only a **starting/entry page**.
+The landing page is only the entry point.
 
-Its purpose is:
+Its intended flow is:
 
-Landing Page
+Landing
 ↓
 Login / Sign Up
 ↓
 Authenticated Product
 ↓
-Continue with the actual agent experience
+Agent Experience
 
-The current landing page does NOT need to contain the complete product experience.
+The existing landing page should remain visually and structurally unchanged unless the user explicitly asks for changes.
 
-Do not spend development time redesigning it.
-
-Do not rewrite its visual design.
-
-Do not replace it with another landing page.
-
-Only make the minimum connection necessary for:
+Only implement the minimum connection required for:
 
 - Login
 - Sign Up
-- Continuing into the authenticated application
+- Navigation into the authenticated product
 
-After authentication, the user should enter the actual product experience described in this document.
-
----
-
-# 4. PRIMARY PRODUCT STRUCTURE
-
-The authenticated application intentionally has THREE primary sections:
-
-1. Chat
-2. Explore
-3. Applications
-
-Keep the product surface area intentionally small.
-
-Do not create unnecessary navigation sections.
-
-The three sections should continuously connect back to the agent.
+Do not spend time redesigning the landing page.
 
 ---
 
-# 5. CHAT — PRIMARY EXPERIENCE
+# 5. PRIMARY PRODUCT STRUCTURE
 
-Chat is the HOME / MAIN page.
+The authenticated product intentionally has THREE primary sections:
 
-It is NOT simply a chatbot.
+## 1. Chat / Agent
+Primary home and core experience.
 
-It is the agent's workspace and command center.
+## 2. Explore
+Personalized browsing of schemes/opportunities.
 
-The user should be able to delegate tasks such as:
+## 3. Applications
+Applications being prepared, submitted, monitored, or requiring action.
+
+These three sections are connected.
+
+They must NOT feel like separate disconnected pages.
+
+The agent is the common layer between all three.
+
+---
+
+# 6. PRODUCT FLOW
+
+The main conceptual flow is:
+
+User need
+↓
+Chat / Agent
+↓
+Discover
+↓
+Check eligibility
+↓
+Verify legitimacy
+↓
+Check documents
+↓
+Prepare application
+↓
+Human review
+↓
+OTP / identity verification
+↓
+Application submitted
+↓
+Agent monitors
+↓
+Status changes
+↓
+User notified
+↓
+Agent helps with next action
+
+The user should never feel like they have to manually navigate through a complicated government workflow.
+
+---
+
+# 7. CHAT — PRIMARY EXPERIENCE
+
+Chat is the HOME page.
+
+It is not simply a messaging interface.
+
+It is the **Agent Workspace / Command Center**.
+
+The user should be able to say:
 
 > "Find scholarships I qualify for."
 
 > "Find scholarships closing this month."
 
-> "Can I apply for this scholarship?"
+> "Can I apply for this?"
 
-> "Prepare the application for me."
+> "Prepare the application."
 
 > "What documents am I missing?"
 
 > "Why was my application rejected?"
 
-> "What should I do next?"
+> "What happened while I was away?"
 
-The agent should also proactively surface useful information.
-
-For example:
-
-> "I found 3 scholarships that match your profile."
-
-or:
-
-> "Your income certificate expires in 21 days."
-
-The user should feel that the agent is already working on their behalf.
-
----
-
-# 6. CHAT MUST NOT LOOK LIKE A GENERIC CHATGPT CLONE
-
-Avoid simply creating:
-
-- Large blank chat screen
-- Generic message bubbles
-- Prompt suggestion chips
-- Static AI orb
-- Standard ChatGPT sidebar
-- Generic dashboard cards
-
-The interface should communicate:
-
-> "I gave this task to an agent and it is working on it."
-
-The agent's actions and state should be visually understandable.
-
----
-
-# 7. AGENT VISUAL PRESENCE
-
-The agent will have an organic morphing blob / character inspired by the interaction style of Bloub.
-
-The blob is NOT merely decoration.
-
-It represents the current state of the agent.
-
-Available states:
-
-- Neutral
-- Attentive
-- Confused
-- Suspicious
-- Surprised
-- Sleepy
-- Excited
-
-Use the states intentionally.
+The agent may also proactively surface useful information.
 
 Examples:
 
-### Neutral
+> "I found 3 scholarships that match your profile."
 
-Agent is idle.
+> "Your income certificate expires in 21 days."
 
-### Attentive
-
-User is typing, speaking, or actively interacting.
-
-### Confused
-
-Required information is ambiguous or missing.
-
-### Suspicious
-
-A scheme or application appears potentially suspicious or requires legitimacy attention.
-
-### Surprised
-
-The agent discovers something unexpected.
-
-### Excited
-
-The agent finds a particularly relevant opportunity or completes an important task.
-
-### Sleepy
-
-Optional low-activity / waiting state.
-
-Do NOT randomly switch between states.
-
-The visual state must correspond to actual agent context.
+> "Your application status changed."
 
 ---
 
-# 8. AGENT WORKING STATES
+# 8. CHAT — DESKTOP DESIGN
 
-When the agent is doing something, the UI should make the process visible.
+The desktop authenticated experience should follow the approved visual direction.
+
+Use the current approved desktop reference as the design foundation.
+
+The desktop layout should feel like an **agent workspace**, not a dashboard.
+
+Primary structure:
+
+- left navigation / section navigation where appropriate
+- large central agent/chat workspace
+- prominent Bloub agent presence
+- contextual/trending content area where appropriate
+- contextual work cards
+- agent activity/state
+
+The main focus should remain on:
+
+1. The agent
+2. The user's current task
+3. What the agent is doing
+
+Do not fill the interface with unnecessary widgets.
+
+---
+
+# 9. CHAT — MOBILE DESIGN
+
+Mobile should use a simplified version of the approved mobile direction.
+
+Requirements:
+
+- No desktop-style permanent sidebar
+- Hamburger menu at the top
+- Chat remains the primary screen
+- Bloub remains visible as the agent identity
+- Content/cards stack naturally
+- Navigation between Chat / Explore / Applications must remain easy
+- Avoid consuming valuable vertical space with unnecessary UI
+
+The mobile interface should feel like a focused agent experience, not a compressed desktop dashboard.
+
+---
+
+# 10. MOBILE NAVIGATION
+
+The approved mobile direction uses:
+
+- Hamburger/menu access
+- Compact section navigation
+- Chat as primary
+- Explore
+- Applications
+
+The red-marked conceptual region from the reference represents navigation between the three main sections.
+
+The implementation should make it obvious which section is active.
+
+Possible structure:
+
+Chat | Explore | Applications
+
+The exact interaction can be adapted for the viewport, but the navigation should remain minimal.
+
+---
+
+# 11. TRENDING / CONTEXTUAL CAROUSEL
+
+The approved design includes a carousel/strip of relevant content.
+
+This area should contain **real contextual information**, not generic marketing cards.
+
+Examples:
+
+- New scholarship opportunities
+- Opportunities matching the user's profile
+- Deadlines approaching
+- Documents needing attention
+- Recent agent discoveries
+
+Example:
+
+"3 opportunities found"
+
+"Scholarship deadline in 5 days"
+
+"Your agent found 2 new matches"
+
+The carousel should remain visually secondary to the main agent experience.
+
+Do not let it become the dominant part of the UI.
+
+---
+
+# 12. AGENT VISUAL IDENTITY — BLOUB
+
+The project uses an organic morphing **Bloub-style agent visual**.
+
+The Bloub assets/animations are already available in the project's `public/` folder.
+
+## IMPORTANT
+
+Before implementing:
+
+1. Inspect the existing Bloub assets in `public/`.
+2. Identify the available animation files.
+3. Reuse those existing assets.
+4. Do NOT download or recreate substitute assets.
+5. Do NOT replace the assets with generic CSS blobs unless explicitly instructed.
+
+The Bloub is the visual embodiment of the agent.
+
+It is NOT merely decorative.
+
+---
+
+# 13. BLOUB STATES
+
+There are exactly seven available states.
+
+Map them intentionally:
+
+## 1. ATTENTIVE
+
+Use when:
+
+- user is actively typing
+- user is speaking
+- user has initiated an interaction
+- agent is actively listening
+
+Meaning:
+
+> "I'm focused on you."
+
+---
+
+## 2. CONFUSED
+
+Use when:
+
+- information is ambiguous
+- required information is missing
+- the agent needs clarification
+
+Example:
+
+> "I need to know your current education level."
+
+---
+
+## 3. EXCITED
+
+Use when:
+
+- a strong scholarship match is found
+- a major task is successfully completed
+- a useful opportunity is discovered
+
+Example:
+
+> "I found a scholarship that matches your profile extremely well."
+
+---
+
+## 4. NEUTRAL
+
+Use when:
+
+- agent is idle
+- no task is currently running
+- normal resting state
+- default state
+
+This is the normal default.
+
+---
+
+## 5. SLEEPY
+
+Use when:
+
+- agent is waiting
+- no immediate task is active
+- low-activity background state
+
+Use subtly.
+
+Do NOT make the product look broken or inactive.
+
+---
+
+## 6. SURPRISED
+
+Use when:
+
+- the agent discovers unexpected information
+- a surprising opportunity appears
+- a status unexpectedly changes
+
+Example:
+
+> "Your application status changed earlier than expected."
+
+---
+
+## 7. SUSPICIOUS
+
+Use when:
+
+- legitimacy verification finds a possible issue
+- an unofficial/suspicious source is detected
+- an application fee or suspicious behavior is detected
+- information conflicts with official sources
+
+This state is especially important because legitimacy/scam detection is a major product feature.
+
+Example:
+
+> "I couldn't verify this scholarship against the official registry."
+
+---
+
+# 14. BLOUB STATE RULES
+
+Do NOT randomly animate/switch states.
+
+The state must correspond to actual application/agent context.
+
+State priority should be deterministic.
+
+Example priority:
+
+1. Suspicious
+2. Confused
+3. Surprised
+4. Excited
+5. Attentive
+6. Neutral
+7. Sleepy
+
+If a high-priority state occurs, it should override a low-priority idle state.
+
+Do not rapidly switch between states.
+
+Avoid excessive animation that distracts from the task.
+
+---
+
+# 15. BLOUB — DESKTOP
+
+Desktop should give the Bloub enough visual prominence to establish the agent's identity.
+
+The Bloub can appear near the main greeting / agent workspace.
+
+It should visually communicate:
+
+> "This is the agent."
+
+When the agent is actively working, the surrounding UI should make the state visible.
+
+Example:
+
+Bloub
++
+"Checking your eligibility..."
+
+or:
+
+Bloub
++
+"Preparing your application..."
+
+---
+
+# 16. BLOUB — MOBILE
+
+Do NOT simply copy the large desktop Bloub onto mobile.
+
+Mobile should use a compact agent identity.
+
+Recommended placement:
+
+- top area/header near agent identity
+- beside the agent name/status
+- persistent but compact
+
+When the agent becomes active, the Bloub may temporarily become more prominent.
+
+Example:
+
+Idle:
+
+Small Bloub in header.
+
+Active:
+
+Larger Bloub + agent progress.
+
+Waiting for user:
+
+Compact Bloub + clear action request.
+
+Do NOT place a large floating Bloub over the bottom message/input area.
+
+---
+
+# 17. AGENT WORK CARDS
+
+Do NOT use generic AI suggestion chips as the primary home interaction.
+
+Use small contextual cards that represent actual user-specific agent work.
+
+Possible cards:
+
+- scholarships discovered
+- applications in progress
+- upcoming deadlines
+- document warnings
+- recent agent actions
+- status updates
+
+Visual inspiration:
+
+Cards may feel like physical notes/cards partially tucked into a surface.
+
+Use:
+
+- depth
+- soft shadow
+- subtle glow
+- small count badge
+- muted update time
+- meaningful content
+
+The card should feel like:
+
+> "This is something the agent found or is working on for me."
+
+Not:
+
+> "Here is a generic feature card."
+
+---
+
+# 18. CHAT — AGENT ACTIVITY
+
+When the agent works, show meaningful activity.
 
 Example:
 
@@ -253,101 +575,46 @@ Another example:
 Finding scholarships...
 
 ✓ Profile loaded
-✓ Requirements understood
-● Searching opportunities
-○ Ranking relevant schemes
+✓ Eligibility requirements understood
+● Searching schemes
+○ Comparing opportunities
 ○ Preparing recommendations
 
-Do not leave the user staring at:
+Do not show fake progress.
 
-> "Thinking..."
-
-for a long period.
-
-Whenever backend state allows it, communicate meaningful progress.
+Only display steps that correspond to actual application state or meaningful agent operations.
 
 ---
 
-# 9. AGENT HOME CONTENT
+# 19. EXPLORE
 
-The Chat home should feel useful even before the user sends a message.
+Explore is for users who prefer to browse themselves.
 
-Possible content:
+It should follow the approved Explore visual reference.
 
-- Opportunities found
-- Applications needing attention
-- Upcoming deadlines
-- Document expiry warnings
-- Recent agent actions
-- Important alerts
+Design direction:
 
-Example:
+- search
+- category/filter controls
+- personalized opportunities
+- compact content cards
+- clean discovery layout
+- content-focused browsing
+- minimal chrome
 
-> Good morning.
+Do NOT turn Explore into:
 
-> I found 3 scholarships that match your profile.
+- a dense government data table
+- a generic admin dashboard
+- an unpersonalized directory
 
-Then display contextual work cards.
-
----
-
-# 10. AGENT WORK CARDS
-
-Do NOT rely primarily on generic suggestion chips.
-
-Instead, create cards that represent actual user-specific information or agent work.
-
-Cards can represent:
-
-- Opportunities found
-- Applications in progress
-- Documents requiring attention
-- Upcoming deadlines
-- Recent agent actions
-- Alerts
-- Completed tasks
-
-Visual direction:
-
-Cards can feel like a physical note/card partially tucked into another surface.
-
-Use:
-
-- subtle depth
-- soft shadows
-- restrained borders
-- small count badges
-- muted timestamps
-- real contextual content
-
-Example:
-
-┌──────────────────────────┐
-│ 3 NEW OPPORTUNITIES       │
-│                          │
-│ Scholarships matching    │
-│ your profile             │
-│                          │
-│ Updated 12 min ago       │
-└──────────────────────────┘
-
-The content should feel generated from the user's actual state, not like a generic feature card.
+Explore is still personalized from known user context.
 
 ---
 
-# 11. EXPLORE
+# 20. EXPLORE CONTENT
 
-Explore is the human browsing mode.
-
-Some users will want to browse opportunities themselves rather than immediately delegate everything to the agent.
-
-Explore should therefore provide a personalized browsing experience.
-
-It should NOT become a generic government-scheme directory.
-
-Use the user's known context to make results relevant.
-
-Each scheme can show:
+Each scheme/opportunity can show:
 
 - Scheme name
 - Department
@@ -358,23 +625,19 @@ Each scheme can show:
 - Legitimacy status
 - Official source
 - Why it may be relevant
-- Recommended next action
+- Next recommended action
 
-Never invent scheme information.
+Never invent information.
 
 ---
 
-# 12. EXPLORE → CHAT
+# 21. EXPLORE → CHAT
 
-Explore must connect directly to the agent.
+Every important Explore result should have an agent handoff.
 
-For example:
+Example:
 
-User opens:
-
-> Scholarship A
-
-Available actions:
+Scholarship A
 
 [View Details]
 
@@ -382,31 +645,38 @@ Available actions:
 
 [Prepare Application]
 
-If the user chooses:
+When the user chooses:
 
-> Ask Agent
+[Ask Agent]
 
-the Chat experience should open with the scheme already in context.
+Open Chat with:
 
-The user should NOT have to explain the scheme again.
+- scheme already in context
+- current user profile context
+- relevant scheme information
+
+The user should not need to explain the scheme again.
 
 ---
 
-# 13. APPLICATIONS
+# 22. APPLICATIONS
 
-Applications shows:
+Applications shows the user's ongoing and completed application workflows.
 
-- Active applications
-- Applications being prepared
-- Submitted applications
-- Applications requiring action
-- Approved applications
-- Rejected applications
-- Application history
+It should show:
 
-Do NOT make Applications only a table.
+- Preparing
+- Ready for review
+- Submitted
+- Under review
+- Action required
+- Approved
+- Rejected
+- Historical applications
 
-It should feel like the agent is managing workflows.
+Do NOT make this only a table.
+
+Show the application's journey.
 
 Example:
 
@@ -418,19 +688,19 @@ Scholarship A
 ⚠ Review required
 🔒 OTP / final submission
 
-The user should immediately understand:
+The user should understand:
 
-- What happened
-- What the agent did
-- What is currently happening
-- What requires the user's attention
-- What happens next
+- what happened
+- what the agent did
+- current state
+- what they need to do
+- what happens next
 
 ---
 
-# 14. APPLICATION WORKSPACE
+# 23. APPLICATION WORKSPACE
 
-Use a clear workflow representation.
+The application workspace should make agent activity visible.
 
 Example:
 
@@ -452,59 +722,53 @@ Review
 Identity Verification
 🔒 OTP required
 
-Clearly communicate:
+The interface MUST clearly communicate:
 
 > "The agent has prepared the application. Identity verification and final submission require the user."
 
-Never imply that the agent bypasses:
-
-- OTP
-- Aadhaar verification
-- CAPTCHA
-- Government identity controls
+Never imply OTP/CAPTCHA bypass.
 
 ---
 
-# 15. APPLICATIONS → CHAT
+# 24. APPLICATIONS → CHAT
 
-Applications must connect back to the agent.
+Applications should connect back to Chat.
 
 Example:
 
 Application:
-
 Scholarship A
 
 Status:
-
 Action Required
 
 Reason:
-
 Income certificate mismatch.
 
-Action:
+Button:
 
 [Ask Agent What Happened]
 
-The Chat experience should open with the relevant application context.
+The Chat experience opens with application context already available.
 
-The user should not have to explain the application again.
+The user should not have to restate the problem.
 
 ---
 
-# 16. DOCUMENTS
+# 25. DOCUMENT PRESENTATION
 
-Documents should not feel like a generic file manager.
+Do not create a huge file-manager-style experience.
 
-Show useful metadata:
+Documents can be presented contextually.
 
-- Document type
-- Status
-- Issue date
-- Expiry date
-- Verification status
-- Applications using the document
+Show:
+
+- type
+- validity
+- status
+- expiry
+- verification
+- applications using it
 
 Example:
 
@@ -517,248 +781,183 @@ Expires in 28 days
 Used by:
 2 applications
 
-[Review]
-
-The agent can surface document issues contextually.
+The agent should surface document problems at the moment they matter.
 
 ---
 
-# 17. PROACTIVE AGENT BEHAVIOR
+# 26. USER PROFILE
 
-Do not create a separate fourth navigation section for notifications.
+Keep profile information centralized.
 
-Important information should appear through:
+Use the profile for:
 
-- Chat
-- Agent work cards
-- Applications
-- Contextual alerts
+- personal information
+- education
+- income
+- category where relevant
+- contact information
+- preferences
+- document connection/status
 
-Examples:
+Do NOT create unnecessary separate sections for every type of data.
 
-> "A scholarship deadline is approaching."
-
-> "Your income certificate expires soon."
-
-> "Your application status changed."
-
-> "I found a new opportunity."
-
-This is important because the system is supposed to be agentic and proactive.
+Progress and important state should appear in Chat and Applications.
 
 ---
 
-# 18. USER PROFILE / ONBOARDING
+# 27. DIGILOCKER / CONNECTED DOCUMENTS
 
-Keep profile management simple.
+If/when DigiLocker integration is available:
 
-Collect only information necessary for:
+Treat it as a connection/action inside Profile or Documents.
 
-- Eligibility matching
-- Scheme discovery
-- Application preparation
-- Contact
+Do not create an unnecessary permanent fourth navigation item.
 
-Possible fields:
+Example:
 
-- Name
-- Age
-- State
-- Education
-- Income range
-- Category where relevant
-- Phone number
-- Relevant preferences
+Connected Documents
+DigiLocker ✓ Connected
 
-Do not unnecessarily collect sensitive information.
+Documents available:
+12
 
-Use Firebase Auth for authentication.
+[Manage]
+
+The agent can then use the available document metadata as part of the application workflow.
+
+If real DigiLocker integration is not available in the current implementation, use an appropriate mock/adapter rather than inventing credentials or insecure flows.
 
 ---
 
-# 19. TECH STACK
+# 28. RESPONSIVE DESIGN
+
+Support:
+
+- desktop
+- tablet
+- mobile
+
+Do not simply shrink desktop.
+
+Mobile should be intentionally designed.
+
+Maintain:
+
+- agent presence
+- easy Chat access
+- section navigation
+- readable cards
+- accessible application states
+
+---
+
+# 29. VISUAL CONSISTENCY
+
+The project's color scheme has already been decided.
+
+Follow the existing approved color system.
+
+Do NOT invent a new palette.
+
+Do NOT replace the chosen brand colors.
+
+Do NOT introduce unrelated gradients or accent colors.
+
+Use centralized design tokens/theme variables where they already exist.
+
+Typography should follow the established project design system.
+
+Do not casually change fonts.
+
+---
+
+# 30. TECH STACK
 
 Use the agreed stack:
 
 - Next.js / React
 - TypeScript where practical
-- FastAPI backend integration
+- FastAPI integration
 - Firebase Auth
 - Firestore through approved backend APIs
 - Google Cloud where appropriate
 
-The backend is the source of truth.
+Never put Gemini API keys or service credentials in the frontend.
 
-Never expose Gemini API keys or service credentials in the frontend.
+The backend remains the source of truth.
 
 ---
 
-# 20. FRONTEND API RESPONSIBILITIES
+# 31. API RESPONSIBILITIES
 
 Use the agreed API contracts.
 
-Expected endpoints include:
+Expected examples:
 
 POST /api/profile
-
 GET /api/profile
 
 POST /api/chat
 
 GET /api/schemes
-
 GET /api/schemes/{id}
 
 POST /api/applications
-
 GET /api/applications
-
 GET /api/applications/{id}
 
 GET /api/applications/{id}/events
 
 GET /api/documents
-
 POST /api/documents
 
 Do NOT duplicate agent logic.
 
-Do NOT create a second Gemini orchestration system.
-
-The actual agent logic belongs to the backend/ADK layer.
+Do NOT create another Gemini orchestration layer.
 
 ---
 
-# 21. IF AN API IS NOT READY
+# 32. IF BACKEND APIs ARE NOT READY
 
-If another branch has not implemented an endpoint yet:
+If an API is not implemented yet:
 
-Do NOT invent an incompatible architecture.
-
-Use a clean:
-
-- typed interface
-- mock adapter
-- local fixture
-- temporary mock response
-
-Document the expected API contract.
-
-Keep the integration easy to replace with the real backend.
-
-Do not create fake permanent implementations.
-
----
-
-# 22. VISUAL THEME — NOT DECIDED YET
-
-IMPORTANT:
-
-The final visual identity has NOT been decided.
-
-Do NOT lock the project into a specific:
-
-- color palette
-- brand color
-- typography system
-- gradient system
-- shadow style
-- background color
-- dark/light theme
-
-The design direction is still being explored.
-
-Use centralized design tokens / CSS variables / theme configuration for:
-
-- colors
-- fonts
-- spacing
-- border radius
-- shadows
-- transitions
-- typography scale
-
-This must allow the team to change the visual identity globally later without restructuring the application.
-
-Do NOT hard-code colors throughout individual components.
-
-Do NOT hard-code typography styles everywhere.
-
-The frontend architecture should make future visual experimentation easy.
-
----
-
-# 23. VISUAL DIRECTION
-
-The product should feel:
-
-- Agentic
-- Calm
-- Intelligent
-- Responsive
-- Human
-- Modern
-- Minimal
-- Context-aware
-
-Avoid making it look like:
-
-- A college portal
-- A government admin dashboard
-- A generic SaaS dashboard
-- A ChatGPT clone
-- A generic AI wrapper
-
-The interface should communicate that an intelligent system is actively working.
-
----
-
-# 24. NO UNNECESSARY SIDEBAR
-
-Do NOT copy the traditional ChatGPT/Claude left-side chat history layout.
-
-The primary navigation should remain:
-
-Chat
-Explore
-Applications
-
-Keep the interface intentionally minimal.
-
----
-
-# 25. RESPONSIVE DESIGN
-
-Support:
-
-- Desktop
-- Tablet
-- Mobile
-
-The agent experience should remain understandable on smaller screens.
-
-Do not hide important agent state simply because the screen is smaller.
-
----
-
-# 26. ACCESSIBILITY
+Do NOT redesign the backend.
 
 Use:
 
-- Semantic HTML
-- Keyboard navigation
-- Clear focus states
-- Accessible labels
-- Readable contrast
-- Meaningful status indicators
+- typed interface
+- temporary mock adapter
+- local fixture
+- mock response
 
-Do not communicate important information through animation alone.
+Keep the interface compatible with the agreed backend contract.
+
+Document what is needed for integration.
+
+Do not create fake permanent backend logic.
 
 ---
 
-# 27. TESTING
+# 33. TESTING
 
-Test the critical flow:
+Test:
+
+- authentication
+- onboarding
+- Chat
+- Explore
+- Applications
+- Chat ↔ Explore handoff
+- Chat ↔ Application handoff
+- application state
+- agent visual states
+- loading
+- errors
+- empty states
+- responsive behavior
+- API integration
+
+Critical demo path:
 
 Landing
 ↓
@@ -780,61 +979,85 @@ OTP handoff
 ↓
 Tracking
 
-Also test:
+---
 
-- Loading states
-- Empty states
-- API errors
-- Network failures
-- Invalid inputs
-- Application status changes
-- Document expiry states
-- Agent state rendering
+# 34. DEVELOPMENT WORKFLOW
+
+Follow this exact process.
+
+## STEP 1 — INSPECT ONCE
+
+Read:
+
+- AGENTS.md
+- BUILD_STATUS.md
+- relevant frontend files
+- relevant existing components
+- Bloub assets in public/
+
+Do not repeatedly inspect the repository.
+
+## STEP 2 — PLAN
+
+Identify:
+
+- what already exists
+- what needs to change
+- which files are involved
+- what must remain untouched
+
+Keep the plan concise.
+
+## STEP 3 — IMPLEMENT
+
+Implement the requested task.
+
+Prefer modular, reusable components.
+
+Do not redesign unrelated functionality.
+
+Do not modify the landing page unless explicitly requested.
+
+## STEP 4 — VERIFY
+
+Run only the checks needed for the requested change.
+
+Do not repeatedly rerun successful commands.
+
+## STEP 5 — UPDATE BUILD STATUS
+
+Update BUILD_STATUS.md.
+
+## STEP 6 — STOP
+
+When the requested task is complete and verified:
+
+STOP.
+
+Do not continue implementing future features.
+
+Do not perform speculative redesigns.
+
+Do not repeatedly run terminal/Git commands.
 
 ---
 
-# 28. DEVELOPMENT RULE — AVOID CREDIT WASTE
-
-This project has limited AI/cloud credits.
-
-Do NOT repeatedly run commands or tools without a reason.
-
-Especially avoid unnecessary repeated:
-
-- git status
-- git diff
-- git log
-- git fetch
-- git pull
-- git push
-- builds
-- dev servers
-- tests
-
-Do not enter a loop of checking repository state.
-
-Do not repeatedly inspect the same files when nothing has changed.
-
-Only perform a command when it contributes to the current task.
-
----
-
-# 29. GIT SAFETY
+# 35. GIT SAFETY
 
 You are working inside a shared Git repository.
 
-Do NOT:
+DO NOT:
 
-- Switch branches
-- Create branches
-- Merge branches
-- Rebase
-- Reset
-- Force push
-- Modify another person's branch
-- Rewrite Git history
+- switch branches
+- create branches
+- merge branches
+- rebase
+- reset
+- force push
+- modify another person's branch
+- rewrite Git history
 
-Stay on the currently assigned branch.
+Stay on the assigned branch.
 
 Do not perform Git operations unless explicitly requested by the user.
 
@@ -847,74 +1070,53 @@ The user/team handles:
 
 ---
 
-# 30. DEVELOPMENT WORKFLOW
+# 36. RESOURCE / CREDIT SAFETY
 
-Follow this workflow.
+Do not unnecessarily consume AI/cloud resources.
 
-## STEP 1 — READ ONCE
+Do NOT repeatedly run:
 
-Read:
+- git status
+- git diff
+- git log
+- git fetch
+- git pull
+- git push
+- builds
+- dev servers
+- tests
 
-- AGENTS.md
-- BUILD_STATUS.md
-- relevant frontend files
+Do not create command loops.
 
-Understand the existing implementation.
+Do not repeatedly inspect the same files when nothing has changed.
 
-Do not repeatedly inspect the repository.
+Only execute commands that are necessary for the current task.
 
-## STEP 2 — PLAN
+If API/cloud usage approaches a warning or quota:
 
-Identify:
+STOP unnecessary usage.
 
-- What already exists
-- What needs to change
-- Which files are involved
-- What must remain untouched
+Use:
 
-Keep the plan concise.
+- mock data
+- local fixtures
+- cached responses
+- deterministic data
+- local development
 
-## STEP 3 — IMPLEMENT
+where possible.
 
-Implement the requested functionality.
-
-Prefer modular changes.
-
-Do not redesign unrelated parts.
-
-Do not modify the existing landing page.
-
-## STEP 4 — VERIFY
-
-Run only the necessary checks/tests.
-
-Do not repeatedly rerun successful commands.
-
-## STEP 5 — UPDATE BUILD STATUS
-
-Update BUILD_STATUS.md.
-
-## STEP 6 — STOP
-
-When the requested work is implemented and verified:
-
-STOP.
-
-Do not continue with speculative improvements.
-
-Do not start unrelated tasks.
-
-Do not repeatedly run Git commands.
+Record the issue in BUILD_STATUS.md.
 
 ---
 
-# 31. BUILD_STATUS.md
+# 37. BUILD_STATUS.md
 
 You MUST maintain BUILD_STATUS.md.
 
 Before starting work:
 
-Read BUILD_STATUS.md once.
+Read it once.
 
 After meaningful progress:
 
@@ -923,8 +1125,6 @@ Update it.
 Before ending the session:
 
 Update it.
-
-Keep it concise.
 
 Track:
 
@@ -937,91 +1137,45 @@ Track:
 
 This is a checkpoint/handoff document.
 
-It is NOT a transcript.
+It is NOT:
 
-It is NOT a command log.
+- a transcript
+- a command log
+- terminal output
+- a list of every tiny action
 
-Never fill it with repetitive Git commands or terminal output.
-
----
-
-# 32. CREDIT / API LIMITS
-
-If Gemini, Google Cloud, Firebase, or another service approaches a quota/credit limit:
-
-STOP unnecessary usage.
-
-Record the issue in BUILD_STATUS.md.
-
-Switch to:
-
-- Mock data
-- Local fixtures
-- Cached responses
-- Deterministic test data
-- Local development
-
-where possible.
-
-Do NOT repeatedly call APIs to test the same functionality.
-
-If a warning indicates credits are running low:
-
-Preserve remaining credits for essential integration and demo testing.
+Keep it concise.
 
 ---
 
-# 33. DO NOT IMPLEMENT
+# 38. DEFINITION OF DONE
 
-Do NOT build:
+Frontend work is complete when:
 
-- Central ADK agents
-- Discovery agent logic
-- Legitimacy agent logic
-- Document agent logic
-- Form automation agent
-- IVR
-- Async status engine
-- Background polling
-- Real government portal automation
-- OTP bypass
-- CAPTCHA bypass
-- Independent Gemini orchestration
-- A separate Firestore architecture
-
-Those belong to other project responsibilities.
-
----
-
-# 34. DEFINITION OF DONE
-
-The frontend work is complete when:
-
-- Existing landing page remains untouched
-- Landing page can lead to Login / Sign Up
-- Authentication flow works
-- Authenticated product shell works
+- Existing landing page remains unchanged
+- Landing page leads into Login / Sign Up
+- Authentication works
+- Authenticated product shell exists
 - Chat is the primary experience
 - Explore works
 - Applications works
-- Chat ↔ Explore integration works
-- Chat ↔ Applications integration works
+- Chat ↔ Explore works
+- Chat ↔ Applications works
 - Agent states are visually represented
+- Bloub states are correctly used
 - Agent activity/progress is visible
 - Application workflow is understandable
-- Documents/status are understandable
-- Loading/error/empty states exist
+- Document/status information is understandable
+- Loading/error/empty states work
 - Responsive behavior works
 - Critical frontend tests pass
 - API integration is clean
 - BUILD_STATUS.md is updated
 - No unnecessary Git operations were performed
-- Visual styling uses centralized theme/design tokens
-- No final color/font system is unnecessarily hard-coded
 
 ---
 
-# 35. FINAL PRODUCT PRINCIPLE
+# 39. FINAL PRODUCT PRINCIPLE
 
 Do NOT build:
 
@@ -1038,3 +1192,45 @@ The user should feel:
 NOT:
 
 > "I am navigating a scholarship website and occasionally asking AI for help."
+
+The agent should feel continuously present.
+
+The interface should minimize navigation, reduce cognitive load, and make the agent's work visible without turning the product into a conventional dashboard.
+:::
+# 40. VISUAL REFERENCE IMAGES
+
+The user has provided four reference images for the frontend implementation.
+
+These images are part of the design specification.
+
+Use them to understand:
+- Desktop layout
+- Mobile layout
+- Section navigation
+- Trending/contextual carousel placement
+- Explore page structure
+- Spacing and visual hierarchy
+- Agent placement
+- Responsive behavior
+
+IMPORTANT:
+The images are reference specifications, not invitations to redesign the product.
+
+Follow the user's written instructions first.
+Use the images to resolve visual/layout questions.
+
+Do NOT:
+- copy unrelated content from the references
+- copy branding from the references
+- copy colors unless explicitly specified by the project
+- redesign the existing landing page
+- introduce extra navigation sections because they appear in a reference image
+
+The four references correspond to:
+
+1. Desktop authenticated experience
+2. Mobile authenticated Chat experience
+3. Mobile navigation / section switching and contextual carousel concept
+4. Explore page visual direction
+
+When the written requirements and image appear to conflict, follow the latest explicit user instruction.

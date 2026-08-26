@@ -1,177 +1,199 @@
 @import "tailwindcss";
 
-/* ─── Design Tokens (Tailwind v4 @theme) ─────────────────────────────────── */
+/* ─── Design Tokens ──────────────────────────────────────────────────────── */
 @theme inline {
-  /* Primary — Ink */
-  --color-ink-50:  #F6F7FA;
-  --color-ink-100: #ECEEF3;
-  --color-ink-200: #D3D7E3;
-  --color-ink-300: #A7AFC6;
-  --color-ink-400: #7580A0;
-  --color-ink-500: #4C577A;
-  --color-ink-600: #333D5C;
-  --color-ink-700: #232B45;
-  --color-ink-800: #161B2E;
-  --color-ink-900: #0F1322;
-  --color-ink-950: #0B1220;
+  --color-green-50:   #E8F5E9;
+  --color-green-100:  #C8E6C9;
+  --color-green-200:  #A5D6A7;
+  --color-green-300:  #81C784;
+  --color-green-400:  #66BB6A;
+  --color-green-500:  #4CAF50;
+  --color-green-600:  #43A047;
+  --color-green-700:  #2E7D32;
+  --color-green-800:  #1B5E20;
+  --color-green-950:  #0A270D;
 
-  /* Neutral — Paper */
-  --color-paper-50:  #FFFFFF;
-  --color-paper-100: #FCFAF6;
-  --color-paper-200: #FAF8F4;
-  --color-paper-300: #F1EDE4;
-  --color-paper-400: #E4DDCF;
-  --color-paper-500: #CFC6B4;
-  --color-paper-600: #B0A48D;
-  --color-paper-700: #8C816C;
-  --color-paper-800: #635A49;
-  --color-paper-900: #3D372C;
-  --color-paper-950: #241F19;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", monospace;
 
-  /* Accent — Amber */
-  --color-amber-50:  #FFF8EC;
-  --color-amber-100: #FEEFD2;
-  --color-amber-200: #FCDCA0;
-  --color-amber-300: #F8C266;
-  --color-amber-400: #F0A83C;
-  --color-amber-500: #C6841F;
-  --color-amber-600: #A66A16;
-  --color-amber-700: #825213;
-  --color-amber-800: #5E3B10;
-  --color-amber-900: #3D260B;
-  --color-amber-950: #241608;
-
-  /* Semantic */
-  --color-status-success:   #4B7A5E;
-  --color-status-pending:   #C6841F;
-  --color-status-attention: #B4543D;
-  --color-status-line:      #D3D7E3;
-
-  /* Font Families */
-  --font-display: "Times New Roman", Georgia, "Palatino Linotype", serif;
-  --font-body:    "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-mono:    ui-monospace, "Cascadia Code", monospace;
-
-  /* Font Sizes */
-  --font-size-xs:   0.8125rem;
-  --font-size-sm:   0.9375rem;
-  --font-size-base: 1.0625rem;
-  --font-size-lg:   1.25rem;
-  --font-size-xl:   1.625rem;
-  --font-size-2xl:  2.125rem;
-  --font-size-3xl:  2.75rem;
-  --font-size-4xl:  3.5rem;
-
-  /* Spacing */
-  --spacing-section: 6rem;
-  --spacing-section-lg: 8rem;
-
-  /* Radius */
-  --radius-sm:   0.25rem;
-  --radius-md:   0.5rem;
-  --radius-lg:   0.75rem;
-  --radius-xl:   1rem;
+  --radius-sm:   0.375rem;
+  --radius-md:   0.75rem;
+  --radius-lg:   1rem;
+  --radius-xl:   1.5rem;
+  --radius-2xl:  2rem;
   --radius-full: 9999px;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(11 18 32 / 0.04);
-  --shadow-md: 0 4px 10px -2px rgb(11 18 32 / 0.08);
-  --shadow-lg: 0 12px 24px -6px rgb(11 18 32 / 0.10);
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; scroll-behavior: smooth; }
 body {
-  background-color: #FAF8F4;
-  color: #0B1220;
+  background: #E8F5E9;
+  color: #0A270D;
   font-family: "Plus Jakarta Sans", system-ui, sans-serif;
-  font-size: 1.0625rem;
+  font-size: 1rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  height: 100%;
 }
 
-/* ─── Marquee Animation ──────────────────────────────────────────────────── */
-@keyframes marquee {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #A5D6A7; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #66BB6A; }
+
+/* ─── Blob Morph Animations ──────────────────────────────────────────────── */
+@keyframes blob-idle {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  25%  { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  50%  { border-radius: 50% 60% 40% 60% / 40% 50% 60% 50%; }
+  75%  { border-radius: 40% 60% 50% 50% / 60% 40% 60% 40%; }
+}
+@keyframes blob-attentive {
+  0%, 100% { border-radius: 50%; transform: scale(1.06); }
+  50% { border-radius: 60% 40% 60% 40% / 40% 60% 40% 60%; transform: scale(1.12); }
+}
+@keyframes blob-excited {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.15) rotate(6deg); }
+  75% { transform: scale(1.1) rotate(-6deg); }
+}
+@keyframes blob-confused {
+  0%, 100% { transform: rotate(0deg) scale(0.96); }
+  33% { transform: rotate(-9deg) scale(0.92); }
+  66% { transform: rotate(9deg) scale(0.97); }
+}
+@keyframes blob-suspicious {
+  0%, 100% { transform: scaleX(1) scaleY(1); }
+  50% { transform: scaleX(0.88) scaleY(1.1); }
+}
+@keyframes blob-sleepy {
+  0%, 100% { transform: scale(0.96) translateY(0); opacity: 0.8; }
+  50% { transform: scale(0.88) translateY(5px); opacity: 0.6; }
+}
+@keyframes blob-surprised {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.32) rotate(6deg); }
+  40% { transform: scale(0.9) rotate(-3deg); }
+  60% { transform: scale(1.16) rotate(2deg); }
+  80% { transform: scale(0.95) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 
-.marquee-track {
+.bloub { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; transition: all 0.5s ease; }
+.bloub-neutral    { animation: blob-idle 7s ease-in-out infinite; }
+.bloub-attentive  { animation: blob-attentive 1.4s ease-in-out infinite; }
+.bloub-excited    { animation: blob-excited 0.8s ease-in-out infinite; }
+.bloub-confused   { animation: blob-confused 2.2s ease-in-out infinite; }
+.bloub-suspicious { animation: blob-suspicious 3.2s ease-in-out infinite; }
+.bloub-sleepy     { animation: blob-sleepy 4.5s ease-in-out infinite; }
+.bloub-surprised  { animation: blob-surprised 1.2s ease-in-out 1; }
+
+/* ─── Work Cards (stacked depth) ─────────────────────────────────────────── */
+.work-card {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid #C8E6C9;
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 2px 8px rgba(27,94,32,0.06);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.work-card:hover { box-shadow: 0 6px 20px rgba(27,94,32,0.13); transform: translateY(-2px); }
+.work-card::before {
+  content: '';
+  position: absolute;
+  top: -4px; left: 8px; right: 8px;
+  height: 100%;
+  background: rgba(200,230,201,0.5);
+  border-radius: 1rem;
+  z-index: -1;
+}
+.work-card::after {
+  content: '';
+  position: absolute;
+  top: -8px; left: 16px; right: 16px;
+  height: 100%;
+  background: rgba(165,214,167,0.25);
+  border-radius: 1rem;
+  z-index: -2;
+}
+
+/* ─── Sidebar nav ────────────────────────────────────────────────────────── */
+.sidebar-item {
   display: flex;
-  width: max-content;
-  animation: marquee 28s linear infinite;
-  will-change: transform;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2E7D32;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
 }
+.sidebar-item:hover  { background: #C8E6C9; color: #1B5E20; }
+.sidebar-item.active { background: #A5D6A7; color: #1B5E20; font-weight: 700; }
 
-.marquee-wrapper:hover .marquee-track {
-  animation-play-state: paused;
+/* ─── Scheme cards ───────────────────────────────────────────────────────── */
+.scheme-card {
+  background: #FFFFFF;
+  border: 1px solid #C8E6C9;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
+.scheme-card:hover { border-color: #66BB6A; box-shadow: 0 4px 16px rgba(27,94,32,0.1); }
 
-@media (prefers-reduced-motion: reduce) {
-  .marquee-track {
-    animation: none !important;
-  }
-  .marquee-wrapper {
-    overflow: hidden;
-  }
+/* ─── Chat bubbles ───────────────────────────────────────────────────────── */
+.msg-agent { background: #FFFFFF; border: 1px solid #C8E6C9; border-radius: 1rem 1rem 1rem 0; }
+.msg-user  { background: #1B5E20; color: white; border-radius: 1rem 1rem 0 1rem; }
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+.slide-up { animation: slide-up 0.35s ease forwards; }
 
-/* ─── Progress Bar Animation ─────────────────────────────────────────────── */
-@keyframes progress-fill {
-  from { width: 0%; }
-  to   { width: 100%; }
+@keyframes step-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
+.step-item { animation: step-in 0.3s ease forwards; }
 
-.progress-bar-active {
-  animation: progress-fill var(--progress-duration, 7s) linear forwards;
-}
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.marquee-track { display: flex; width: max-content; animation: marquee 28s linear infinite; }
+.marquee-wrapper:hover .marquee-track { animation-play-state: paused; }
 
-/* ─── Status Feed Stagger ────────────────────────────────────────────────── */
+@keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+.ping-dot { animation: ping 1s cubic-bezier(0,0,0.2,1) infinite; }
+
+/* ─── Mobile overlay ─────────────────────────────────────────────────────── */
+.mobile-overlay { position: fixed; inset: 0; background: rgba(10,39,13,0.45); z-index: 40; backdrop-filter: blur(2px); }
+
+/* ─── Legacy landing page animations ─────────────────────────────────────── */
+@keyframes progress-fill { from { width: 0%; } to { width: 100%; } }
+.progress-bar-active { animation: progress-fill var(--progress-duration, 7s) linear forwards; }
+
 @keyframes slide-up-fade {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+.feed-item { opacity: 0; animation: slide-up-fade 0.5s ease forwards; }
 
-.feed-item {
-  opacity: 0;
-  animation: slide-up-fade 0.5s ease forwards;
-}
-
-/* ─── Showcase Visual Transitions ───────────────────────────────────────── */
 @keyframes visual-enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
+.visual-panel-enter { animation: visual-enter 0.35s ease forwards; }
 
-.visual-panel-enter {
-  animation: visual-enter 0.35s ease forwards;
-}
-
-/* ─── Scroll-triggered: prefers-reduced-motion ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .progress-bar-active,
-  .feed-item,
-  .visual-panel-enter {
+  .progress-bar-active, .feed-item, .visual-panel-enter,
+  .bloub-neutral, .bloub-attentive, .bloub-excited, .bloub-confused,
+  .bloub-suspicious, .bloub-sleepy, .bloub-surprised, .marquee-track {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
