@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useApp } from "../context/AppContext";
 
 /**
@@ -8,9 +9,13 @@ import { useApp } from "../context/AppContext";
  */
 export default function NavigationInterceptor() {
   const { triggerTransition, isTransitioning } = useApp();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleClick = (e) => {
+      // Only intercept from the landing page
+      if (pathname !== "/") return;
+
       // Don't intercept if already transitioning
       if (isTransitioning) return;
 
@@ -20,7 +25,7 @@ export default function NavigationInterceptor() {
 
       const href = anchor.getAttribute("href");
 
-      // Intercept navigation to /login or /signup only
+      // Intercept navigation to /login or /signup only from landing
       if (href === "/login" || href === "/signup") {
         e.preventDefault();
         e.stopPropagation();

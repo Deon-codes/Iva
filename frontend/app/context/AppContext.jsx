@@ -1,21 +1,29 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { auth } from "../../lib/firebase";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from "firebase/auth";
 
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  
+  const [authLoading, setAuthLoading] = useState(true);
+
   // App States
   const [schemes, setSchemes] = useState([]);
   const [applications, setApplications] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [chatHistory, setChatHistory] = useState([]);
   const [agentState, setAgentState] = useState("Neutral");
-  
+
   // Chat input prefixing for context routing
   const [pendingPrompt, setPendingPrompt] = useState("");
 
@@ -26,31 +34,60 @@ export function AppProvider({ children }) {
   // Guard: prevent refreshData from being called in a loop
   const fetchedRef = useRef(false);
 
-  // Load session from localStorage if exists
+  // ─── Firebase Auth Listener ────────────────────────────────────────────────
+  // Single onAuthStateChanged listener. Sets user state + merges profile from localStorage.
+  // This is the single source of truth for auth state.
+  // Also supports a demo-mode localStorage fallback when Firebase isn't configured.
   useEffect(() => {
-    const storedUser = localStorage.getItem("hazela_user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        // Merge Firebase user data with stored profile data
+        const storedProfile = getStoredProfile(firebaseUser.uid);
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: storedProfile?.name || firebaseUser.displayName || "",
+          phone: storedProfile?.phone || "",
+          state: storedProfile?.state || "",
+          education: storedProfile?.education || "",
+          category: storedProfile?.category || "",
+          incomeRange: storedProfile?.incomeRange || "",
+          preferences: storedProfile?.preferences || "",
+          age: storedProfile?.age || "",
+          onboardingCompleted: storedProfile?.onboardingCompleted || false,
+        });
+      } else {
+        // No Firebase user — check localStorage for demo-mode session
+        try {
+          const stored = localStorage.getItem("hazela_user");
+          if (stored) {
+            setUser(JSON.parse(stored));
+          } else {
+            setUser(null);
+          }
+        } catch {
+          setUser(null);
+        }
+      }
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  // Fetch data when user is authenticated
-  const refreshData = async () => {
+  // Fetch data when user is authenticated and onboarding is complete
+  const refreshData = useCallback(async () => {
     try {
       const [profileRes, schemesRes, appsRes, docsRes] = await Promise.all([
         fetch("/api/profile"),
         fetch("/api/schemes"),
         fetch("/api/applications"),
-        fetch("/api/documents")
+        fetch("/api/documents"),
       ]);
 
       if (profileRes.ok) {
         const profileData = await profileRes.json();
-        // Sync user details if logged in
-        if (user) {
-          setUser(prev => ({ ...prev, ...profileData }));
-        }
+        setUser((prev) => (prev ? { ...prev, ...profileData } : prev));
       }
       if (schemesRes.ok) setSchemes(await schemesRes.json());
       if (appsRes.ok) setApplications(await appsRes.json());
@@ -58,124 +95,201 @@ export function AppProvider({ children }) {
     } catch (error) {
       console.error("Error loading mock database in AppContext:", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (user?.onboardingCompleted && !fetchedRef.current) {
       fetchedRef.current = true;
       refreshData();
     }
-  }, [user?.onboardingCompleted]);
+  }, [user?.onboardingCompleted, refreshData]);
 
-  // Auth Operations
-  const login = (name, phone) => {
-    const mockUser = {
-      name: name || "Aarav Sharma",
-      phone: phone || "+91 98765 43210",
-      onboardingCompleted: true
-    };
-    setUser(mockUser);
-    localStorage.setItem("hazela_user", JSON.stringify(mockUser));
-    router.push("/chat");
+  // ─── Profile Persistence (localStorage) ───────────────────────────────────
+  // Store app-specific profile keyed by Firebase UID.
+  function getStoredProfile(uid) {
+    try {
+      const raw = localStorage.getItem(`hazela_profile_${uid}`);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveStoredProfile(uid, profile) {
+    try {
+      localStorage.setItem(`hazela_profile_${uid}`, JSON.stringify(profile));
+    } catch {
+      // localStorage may be full or disabled — non-critical
+    }
+  }
+
+  function removeStoredProfile(uid) {
+    try {
+      localStorage.removeItem(`hazela_profile_${uid}`);
+    } catch {
+      // ignore
+    }
+  }
+
+  // ─── Auth Operations ──────────────────────────────────────────────────────
+
+  /**
+   * Sign in with email + password via Firebase.
+   * Returns { success, error } — caller decides how to display.
+   */
+  const login = async (email, password) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged listener handles setUser
+      router.push("/chat");
+      return { success: true };
+    } catch (error) {
+      return { success: false, error };
+    }
   };
 
-  const signup = (name, phone) => {
-    const mockUser = {
-      name,
-      phone,
-      onboardingCompleted: false
-    };
-    setUser(mockUser);
-    localStorage.setItem("hazela_user", JSON.stringify(mockUser));
-    router.push("/onboarding");
+  /**
+   * Create a new Firebase user + set display name.
+   * Returns { success, error }.
+   */
+  const signup = async (email, password, name, phone) => {
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+      // Set display name on Firebase user
+      if (name) {
+        await updateProfile(cred.user, { displayName: name });
+      }
+
+      // Store initial profile data (not yet onboarded)
+      saveStoredProfile(cred.user.uid, {
+        name: name || "",
+        phone: phone || "",
+        onboardingCompleted: false,
+      });
+
+      // onAuthStateChanged will fire and set user with onboardingCompleted: false
+      router.push("/onboarding");
+      return { success: true };
+    } catch (error) {
+      return { success: false, error };
+    }
   };
 
-  const logout = () => {
+  /**
+   * Sign out of Firebase and clear all local state.
+   */
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch {
+      // Sign out should always proceed even if Firebase call fails
+    }
+
+    // Clear local app state
+    if (user?.uid) removeStoredProfile(user.uid);
+    try { localStorage.removeItem("hazela_user"); } catch { /* ignore */ }
     setUser(null);
-    localStorage.removeItem("hazela_user");
     fetchedRef.current = false;
+    setSchemes([]);
+    setApplications([]);
+    setDocuments([]);
+    setChatHistory([]);
+    setAgentState("Neutral");
+    setPendingPrompt("");
+
     router.push("/");
   };
 
+  /**
+   * Complete onboarding: save profile, mark as completed.
+   */
   const completeOnboarding = async (profileData) => {
     try {
       const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profileData, onboardingCompleted: true })
+        body: JSON.stringify({ ...profileData, onboardingCompleted: true }),
       });
-      if (res.ok) {
-        const updatedProfile = await res.json();
-        const updatedUser = { ...user, onboardingCompleted: true, name: updatedProfile.name };
-        setUser(updatedUser);
-        localStorage.setItem("hazela_user", JSON.stringify(updatedUser));
-        router.push("/chat");
+
+      const updatedProfile = res.ok ? await res.json() : profileData;
+
+      // Merge and persist
+      const fullProfile = {
+        ...updatedProfile,
+        onboardingCompleted: true,
+      };
+
+      if (user?.uid) {
+        saveStoredProfile(user.uid, fullProfile);
       }
+
+      setUser((prev) => (prev ? { ...prev, ...fullProfile } : prev));
+      router.push("/chat");
     } catch (error) {
       console.error("Onboarding API error:", error);
+      // Still mark onboarded locally so user isn't stuck
+      if (user?.uid) {
+        saveStoredProfile(user.uid, { ...profileData, onboardingCompleted: true });
+      }
+      setUser((prev) =>
+        prev ? { ...prev, ...profileData, onboardingCompleted: true } : prev
+      );
+      router.push("/chat");
     }
   };
 
-  // Chat message submission
+  // ─── Chat ─────────────────────────────────────────────────────────────────
+
   const sendMessage = async (text, schemeContext = null, applicationContext = null) => {
-    // Add user message locally first for responsiveness
     const userMsg = {
       id: `msg-user-${Date.now()}`,
       sender: "user",
       text,
-      timestamp: "Just now"
+      timestamp: "Just now",
     };
-    setChatHistory(prev => [...prev, userMsg]);
-    // User submitted → agent is processing
+    setChatHistory((prev) => [...prev, userMsg]);
     setAgentState("Thinking");
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          schemeContext,
-          applicationContext
-        })
+        body: JSON.stringify({ message: text, schemeContext, applicationContext }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        // Append agent response
-        setChatHistory(prev => [...prev, data.chatMessage]);
+        setChatHistory((prev) => [...prev, data.chatMessage]);
         const newState = data.agentState || "Neutral";
         setAgentState(newState);
-        // Auto-transition back to Neutral after Excited/Confused/Suspicious
         if (["Excited", "Confused", "Suspicious"].includes(newState)) {
           setTimeout(() => setAgentState("Neutral"), 4000);
         }
-        
-        // Sync modified states
         if (data.updatedApplications) setApplications(data.updatedApplications);
         if (data.updatedProfile) {
-          setUser(prev => ({ ...prev, ...data.updatedProfile }));
+          setUser((prev) => (prev ? { ...prev, ...data.updatedProfile } : prev));
         }
       }
     } catch (error) {
       console.error("Chat API error:", error);
-      setChatHistory(prev => [
+      setChatHistory((prev) => [
         ...prev,
         {
           id: `msg-err-${Date.now()}`,
           sender: "agent",
           text: "I encountered a local network issue checking that. Please retry.",
           timestamp: "Just now",
-          agentState: "Confused"
-        }
+          agentState: "Confused",
+        },
       ]);
       setAgentState("Confused");
-      // Auto-transition back to Neutral after brief Confused display
       setTimeout(() => setAgentState("Neutral"), 4000);
     }
   };
 
-  // Explore and Application interactions with the Chat agent
+  // ─── Explore / Applications / Documents ────────────────────────────────────
+
   const askAgentAboutScheme = (scheme) => {
     setPendingPrompt(`Explain eligibility criteria for ${scheme.name}`);
     router.push("/chat");
@@ -211,21 +325,16 @@ export function AppProvider({ children }) {
       const res = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          schemeId: scheme.id,
-          name: scheme.name
-        })
+        body: JSON.stringify({ schemeId: scheme.id, name: scheme.name }),
       });
 
       if (res.ok) {
         const newApp = await res.json();
-        setApplications(prev => {
-          const index = prev.findIndex(a => a.id === newApp.id);
-          if (index !== -1) return prev.map((a, i) => i === index ? newApp : a);
+        setApplications((prev) => {
+          const index = prev.findIndex((a) => a.id === newApp.id);
+          if (index !== -1) return prev.map((a, i) => (i === index ? newApp : a));
           return [...prev, newApp];
         });
-        
-        // Push context to chat
         setPendingPrompt(`Prepare application for ${scheme.name}`);
         router.push("/chat");
       }
@@ -234,34 +343,27 @@ export function AppProvider({ children }) {
     }
   };
 
-  // Add a document
   const uploadDocument = async (docType, expiryDate) => {
     try {
       const res = await fetch("/api/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: docType,
-          expiryDate
-        })
+        body: JSON.stringify({ type: docType, expiryDate }),
       });
       if (res.ok) {
         const newDoc = await res.json();
-        setDocuments(prev => [...prev, newDoc]);
-        
-        // Inform user in chat
-        setChatHistory(prev => [
+        setDocuments((prev) => [...prev, newDoc]);
+        setChatHistory((prev) => [
           ...prev,
           {
             id: `msg-doc-${Date.now()}`,
             sender: "agent",
             text: `I have successfully scanned and logged your ${docType}. I will run check routines against matching schemes now.`,
             timestamp: "Just now",
-            agentState: "Excited"
-          }
+            agentState: "Excited",
+          },
         ]);
         setAgentState("Excited");
-        // Auto-transition back to Neutral after brief Excited display
         setTimeout(() => setAgentState("Neutral"), 4000);
       }
     } catch (error) {
@@ -269,9 +371,10 @@ export function AppProvider({ children }) {
     }
   };
 
-  // Trigger Bloub transition before navigating to auth pages
+  // ─── Bloub Transition ─────────────────────────────────────────────────────
+
   const triggerTransition = (target) => {
-    if (isTransitioning) return; // Prevent double-clicks
+    if (isTransitioning) return;
     setTransitionTarget(target);
     setIsTransitioning(true);
   };
@@ -288,7 +391,7 @@ export function AppProvider({ children }) {
     <AppContext.Provider
       value={{
         user,
-        loading,
+        loading: authLoading,
         schemes,
         applications,
         documents,
@@ -311,7 +414,7 @@ export function AppProvider({ children }) {
         isTransitioning,
         transitionTarget,
         triggerTransition,
-        completeTransition
+        completeTransition,
       }}
     >
       {children}

@@ -1,24 +1,26 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApp } from "../context/AppContext";
+import { getAuthErrorMessage } from "../../lib/auth";
 
 const JAKARTA = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 const SERIF = { fontFamily: "Georgia, 'Times New Roman', serif" };
 
-function UserIcon() {
+function EmailIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="M22 7l-10 6L2 7" />
     </svg>
   );
 }
 
-function PhoneIcon() {
+function LockIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="7" y="2" width="10" height="20" rx="2" />
-      <line x1="11" y1="18" x2="13" y2="18" />
+      <rect x="3" y="11" width="18" height="11" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
   );
 }
@@ -32,14 +34,68 @@ function ArrowIcon() {
   );
 }
 
-export default function LoginPage() {
-  const { login } = useApp();
-  const [name, setName] = useState("Aarav Sharma");
-  const [phone, setPhone] = useState("+91 98765 43210");
+function SpinnerIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true" style={{ animation: "spin 0.7s linear infinite" }}>
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+  );
+}
 
-  const handleSubmit = (e) => {
+export default function LoginPage() {
+  const { login, loading: authLoading, user } = useApp();
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // If already authenticated, redirect to dashboard
+  if (!authLoading && user) {
+    router.replace("/chat");
+    return null;
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(name, phone);
+    setError("");
+
+    if (!email.trim() || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
+
+    setSubmitting(true);
+    const result = await login(email.trim(), password);
+
+    if (!result.success) {
+      setError(getAuthErrorMessage(result.error));
+      setSubmitting(false);
+    }
+    // On success, onAuthStateChanged fires → user state updates → redirect
+  };
+
+  const handleDemoLogin = () => {
+    // Demo mode: bypass Firebase, set local user and go to chat
+    setSubmitting(true);
+    const mockUser = {
+      uid: "demo-user",
+      email: "demo@hazela.local",
+      name: "Aarav Sharma",
+      phone: "+91 98765 43210",
+      state: "Maharashtra",
+      education: "Undergraduate",
+      category: "OBC",
+      incomeRange: "₹2,00,000 - ₹2,50,000",
+      preferences: "Technical courses, Maharashtra state schemes, Central government scholarships",
+      age: "21",
+      onboardingCompleted: true,
+    };
+    // Store in localStorage so AppContext picks it up via onAuthStateChanged
+    // For demo mode we'll use a flag and push directly
+    localStorage.setItem("hazela_user", JSON.stringify(mockUser));
+    // Use router push directly for demo mode
+    router.push("/chat");
   };
 
   return (
@@ -118,11 +174,6 @@ export default function LoginPage() {
               style={{
                 width: 240,
                 height: 240,
-                borderRadius: "2rem",
-                background: "rgba(255,255,255,0.14)",
-                border: "1px solid rgba(255,255,255,0.22)",
-                backdropFilter: "blur(4px)",
-                boxShadow: "0 20px 40px -12px rgba(0,0,0,0.35)",
               }}
             >
               <img
@@ -166,8 +217,6 @@ export default function LoginPage() {
                   width: 104,
                   height: 104,
                   borderRadius: "1.5rem",
-                  background: "#E8F5E9",
-                  border: "1px solid #C8E6C9",
                 }}
               >
                 <img
@@ -210,31 +259,54 @@ export default function LoginPage() {
               </p>
             </div>
 
+            {/* Error banner */}
+            {error && (
+              <div
+                role="alert"
+                style={{
+                  ...JAKARTA,
+                  padding: "0.75rem 1rem",
+                  marginBottom: "1rem",
+                  borderRadius: "0.75rem",
+                  background: "#FFF3E0",
+                  border: "1px solid #FFCC80",
+                  color: "#E65100",
+                  fontSize: "0.8125rem",
+                  fontWeight: 500,
+                  lineHeight: 1.4,
+                }}
+              >
+                {error}
+              </div>
+            )}
+
             {/* Form */}
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               <div>
                 <label
-                  htmlFor="name"
+                  htmlFor="email"
                   className="block font-semibold"
                   style={{ ...JAKARTA, fontSize: "0.8125rem", color: "#1B5E20", marginBottom: "0.5rem" }}
                 >
-                  Full Name
+                  Email Address
                 </label>
                 <div className="relative">
                   <span
                     className="absolute pointer-events-none"
                     style={{ left: 16, top: "50%", transform: "translateY(-50%)", color: "#81C784", display: "flex" }}
                   >
-                    <UserIcon />
+                    <EmailIcon />
                   </span>
                   <input
-                    id="name"
-                    name="name"
-                    type="text"
+                    id="email"
+                    name="email"
+                    type="email"
                     required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your full name"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    disabled={submitting}
                     className="block w-full text-sm transition-all"
                     style={{
                       ...JAKARTA,
@@ -244,6 +316,7 @@ export default function LoginPage() {
                       color: "#0A270D",
                       background: "#FAFDF9",
                       outline: "none",
+                      opacity: submitting ? 0.6 : 1,
                     }}
                     onFocus={(e) => {
                       e.target.style.borderColor = "#66BB6A";
@@ -261,27 +334,30 @@ export default function LoginPage() {
 
               <div>
                 <label
-                  htmlFor="phone"
+                  htmlFor="password"
                   className="block font-semibold"
                   style={{ ...JAKARTA, fontSize: "0.8125rem", color: "#1B5E20", marginBottom: "0.5rem" }}
                 >
-                  Phone Number
+                  Password
                 </label>
                 <div className="relative">
                   <span
                     className="absolute pointer-events-none"
                     style={{ left: 16, top: "50%", transform: "translateY(-50%)", color: "#81C784", display: "flex" }}
                   >
-                    <PhoneIcon />
+                    <LockIcon />
                   </span>
                   <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
+                    id="password"
+                    name="password"
+                    type="password"
                     required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
+                    autoComplete="current-password"
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    disabled={submitting}
                     className="block w-full text-sm transition-all"
                     style={{
                       ...JAKARTA,
@@ -291,6 +367,7 @@ export default function LoginPage() {
                       color: "#0A270D",
                       background: "#FAFDF9",
                       outline: "none",
+                      opacity: submitting ? 0.6 : 1,
                     }}
                     onFocus={(e) => {
                       e.target.style.borderColor = "#66BB6A";
@@ -308,6 +385,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
+                disabled={submitting}
                 className="group w-full flex items-center justify-center font-bold text-white transition-all"
                 style={{
                   ...JAKARTA,
@@ -316,13 +394,16 @@ export default function LoginPage() {
                   borderRadius: "1rem",
                   fontSize: "0.875rem",
                   background: "#1B5E20",
-                  cursor: "pointer",
+                  cursor: submitting ? "not-allowed" : "pointer",
                   boxShadow: "0 4px 12px rgba(27,94,32,0.25)",
+                  opacity: submitting ? 0.7 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#2E7D32";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 8px 20px rgba(27,94,32,0.3)";
+                  if (!submitting) {
+                    e.currentTarget.style.background = "#2E7D32";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 8px 20px rgba(27,94,32,0.3)";
+                  }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "#1B5E20";
@@ -330,15 +411,18 @@ export default function LoginPage() {
                   e.currentTarget.style.boxShadow = "0 4px 12px rgba(27,94,32,0.25)";
                 }}
               >
-                Sign In
-                <span
-                  className="transition-transform duration-200"
-                  onMouseEnter={(e) => (e.currentTarget.style.transform = "translateX(3px)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.transform = "translateX(0)")}
-                  style={{ display: "flex" }}
-                >
-                  <ArrowIcon />
-                </span>
+                {submitting ? <SpinnerIcon /> : null}
+                {submitting ? "Signing in…" : "Sign In"}
+                {!submitting && (
+                  <span
+                    className="transition-transform duration-200"
+                    onMouseEnter={(e) => (e.currentTarget.style.transform = "translateX(3px)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.transform = "translateX(0)")}
+                    style={{ display: "flex" }}
+                  >
+                    <ArrowIcon />
+                  </span>
+                )}
               </button>
             </form>
 
@@ -366,7 +450,8 @@ export default function LoginPage() {
 
             {/* Demo button */}
             <button
-              onClick={() => login("Aarav Sharma", "+91 98765 43210")}
+              onClick={handleDemoLogin}
+              disabled={submitting}
               className="w-full flex justify-center items-center font-semibold transition-all"
               style={{
                 ...JAKARTA,
@@ -377,11 +462,14 @@ export default function LoginPage() {
                 color: "#1B5E20",
                 background: "#E8F5E9",
                 border: "1px solid #C8E6C9",
-                cursor: "pointer",
+                cursor: submitting ? "not-allowed" : "pointer",
+                opacity: submitting ? 0.6 : 1,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#C8E6C9";
-                e.currentTarget.style.transform = "translateY(-1px)";
+                if (!submitting) {
+                  e.currentTarget.style.background = "#C8E6C9";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "#E8F5E9";
@@ -398,6 +486,8 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </main>
   );
 }

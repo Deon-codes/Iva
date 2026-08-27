@@ -11,8 +11,8 @@ import { useApp } from "../context/AppContext";
 // Fixed duration matching the actual bloub-my-cycle.gif asset length.
 // HTML <img> elements do not expose a .duration property for GIFs,
 // so we use the known intended duration rather than unreliable detection.
-const GIF_DURATION_MS = 7000;
-const EXIT_FADE_MS = 400;
+const GIF_DURATION_MS = 6000;
+const EXIT_FADE_MS = 0;
 
 export default function BloubTransition() {
   const { isTransitioning, completeTransition } = useApp();
