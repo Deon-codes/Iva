@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useApp } from "../context/AppContext";
 import { getAuthErrorMessage } from "../../lib/auth";
@@ -43,7 +43,7 @@ function SpinnerIcon() {
 }
 
 export default function LoginPage() {
-  const { login, loading: authLoading, user } = useApp();
+  const { login, loginWithGoogle, loading: authLoading, user } = useApp();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,9 +51,22 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   // If already authenticated, redirect to dashboard
-  if (!authLoading && user) {
-    router.replace("/chat");
-    return null;
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/chat");
+    }
+  }, [authLoading, user, router]);
+
+  // Don't render the form while still resolving auth or while redirecting
+  if (authLoading || user) {
+    return (
+      <main
+        className="min-h-screen flex items-center justify-center relative overflow-hidden"
+        style={{ background: "#E8F5E9", padding: "1.5rem" }}
+      >
+        <div style={{ width: 36, height: 36, border: "3px solid #A5D6A7", borderTopColor: "#1B5E20", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      </main>
+    );
   }
 
   const handleSubmit = async (e) => {
@@ -73,6 +86,16 @@ export default function LoginPage() {
       setSubmitting(false);
     }
     // On success, onAuthStateChanged fires → user state updates → redirect
+  };
+
+  const handleGoogleLogin = async () => {
+    setError("");
+    setSubmitting(true);
+    const result = await loginWithGoogle();
+    if (!result.success) {
+      setError(getAuthErrorMessage(result.error));
+      setSubmitting(false);
+    }
   };
 
   const handleDemoLogin = () => {
@@ -280,7 +303,67 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Form */}
+            {/* Google Sign-In */}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={submitting}
+              className="w-full flex items-center justify-center font-semibold transition-all"
+              style={{
+                ...JAKARTA,
+                gap: "0.75rem",
+                padding: "0.875rem 1rem",
+                borderRadius: "1rem",
+                fontSize: "0.875rem",
+                color: "#3C4043",
+                background: "#FFFFFF",
+                border: "1px solid #DADCE0",
+                cursor: submitting ? "not-allowed" : "pointer",
+                opacity: submitting ? 0.6 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!submitting) {
+                  e.currentTarget.style.background = "#F8F9FA";
+                  e.currentTarget.style.borderColor = "#C6C8CA";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#FFFFFF";
+                e.currentTarget.style.borderColor = "#DADCE0";
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+                <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+                <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+              </svg>
+              Continue with Google
+            </button>
+
+            {/* Or divider */}
+            <div className="relative" style={{ margin: "1.25rem 0" }} role="separator">
+              <div className="absolute flex items-center" style={{ inset: 0 }}>
+                <div className="w-full" style={{ borderTop: "1px solid #E8F5E9" }} />
+              </div>
+              <div className="relative flex justify-center">
+                <span
+                  className="font-bold uppercase"
+                  style={{
+                    ...JAKARTA,
+                    padding: "0 0.75rem",
+                    background: "#FFFFFF",
+                    color: "#A5D6A7",
+                    fontSize: "0.6875rem",
+                    letterSpacing: "0.12em",
+                  }}
+                >
+                  or
+                </span>
+              </div>
+            </div>
+
+            {/* Email/Password Form */}
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               <div>
                 <label

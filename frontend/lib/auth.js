@@ -19,13 +19,21 @@ const CODE_MAP = {
   "auth/user-disabled": "This account has been disabled. Contact support.",
   "auth/too-many-requests": "Too many attempts. Please wait a moment and try again.",
 
+  // Google
+  "auth/popup-closed-by-user":
+    "Sign-in popup was closed. Try again when ready.",
+  "auth/popup-blocked":
+    "Popup was blocked by your browser. Allow popups for this site and try again.",
+  "auth/cancelled-popup-request":
+    "Sign-in was cancelled. Try again when ready.",
+  "auth/account-exists-with-different-credential":
+    "An account already exists with this email using a different sign-in method.",
+
   // Network
   "auth/network-request-failed":
     "Network error — please check your connection and try again.",
 
-  // General
-  "auth/popup-closed-by-user": "Sign-in popup was closed. Try again when ready.",
-  "auth/cancelled-popup-request": "Sign-in was cancelled. Try again when ready.",
+
 };
 
 /**

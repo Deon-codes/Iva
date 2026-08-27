@@ -6,6 +6,8 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   updateProfile,
 } from "firebase/auth";
@@ -170,6 +172,39 @@ export function AppProvider({ children }) {
 
       // onAuthStateChanged will fire and set user with onboardingCompleted: false
       router.push("/onboarding");
+      return { success: true };
+    } catch (error) {
+      return { success: false, error };
+    }
+  };
+
+  /**
+   * Sign in with Google popup.
+   * Returns { success, error }.
+   */
+  const loginWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const cred = await signInWithPopup(auth, provider);
+      const uid = cred.user.uid;
+
+      // Check if this Google user already has a stored profile
+      const existing = getStoredProfile(uid);
+
+      if (existing?.onboardingCompleted) {
+        // Returning user — profile complete, go to dashboard
+        router.push("/chat");
+      } else {
+        // New user — store profile stub and redirect to onboarding
+        saveStoredProfile(uid, {
+          name: cred.user.displayName || "",
+          phone: "",
+          onboardingCompleted: false,
+        });
+        // onAuthStateChanged will fire → user set with onboardingCompleted: false
+        router.push("/onboarding");
+      }
+
       return { success: true };
     } catch (error) {
       return { success: false, error };
@@ -401,6 +436,7 @@ export function AppProvider({ children }) {
         setPendingPrompt,
         login,
         signup,
+        loginWithGoogle,
         logout,
         completeOnboarding,
         sendMessage,
