@@ -8,7 +8,6 @@ import StatusFeedMoment from "./components/landing/StatusFeedMoment";
 import TrustControlSection from "./components/landing/TrustControlSection";
 import DocumentsSection from "./components/landing/DocumentsSection";
 import PhoneAccessSection from "./components/landing/PhoneAccessSection";
-import FinalCTA from "./components/landing/FinalCTA";
 import Footer from "./components/landing/Footer";
 
 export default function Home() {
@@ -24,7 +23,6 @@ export default function Home() {
       <TrustControlSection />
       <DocumentsSection />
       <PhoneAccessSection />
-      <FinalCTA />
       <Footer />
     </main>
   );

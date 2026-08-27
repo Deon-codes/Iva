@@ -4,40 +4,42 @@ import { useEffect, useRef, useState } from "react";
 const FEED_ITEMS = [
   {
     icon: "✓",
-    label: "Application submitted",
-    sub: "PM YASASVI Scholarship · 2 days ago",
+    label: "Under Review",
+    sub: "Your application is being reviewed.",
     status: "success",
-  },
-  {
-    icon: "✓",
-    label: "Status checked",
-    sub: "Portal confirmed receipt · Yesterday",
-    status: "success",
-  },
-  {
-    icon: "●",
-    label: "Waiting for department response",
-    sub: "Expected within 10–14 working days",
-    status: "pending",
   },
   {
     icon: "⚠",
-    label: "Action required",
-    sub: "Upload updated income certificate by 30 Aug",
+    label: "Action Required",
+    sub: "Your income certificate needs to be renewed. Next action: Upload the updated certificate.",
     status: "attention",
+  },
+  {
+    icon: "✓",
+    label: "Approved",
+    sub: "Your application has been approved.",
+    status: "approved",
+  },
+  {
+    icon: "✕",
+    label: "Rejected",
+    sub: "Why: Eligibility requirement not met.",
+    status: "rejected",
   },
 ];
 
 const STATUS_COLORS = {
-  success:   "#4B7A5E",
-  pending:   "#C6841F",
-  attention: "#B4543D",
+  success: "#4CAF50",
+  attention: "#E07B39",
+  approved: "#2E7D32",
+  rejected: "#C62828",
 };
 
 const STATUS_BG = {
-  success:   "#E8F2ED",
-  pending:   "#FFF8EC",
-  attention: "#FBF0EE",
+  success: "#F3EFE9",
+  attention: "#FFF3ED",
+  approved: "#F3EFE9",
+  rejected: "#FFEBEE",
 };
 
 export default function StatusFeedMoment() {
@@ -64,7 +66,8 @@ export default function StatusFeedMoment() {
     <section
       style={{
         padding: "7rem 2rem",
-        background: "#FAF8F4",
+        background: "#F3EFE9",
+        borderTop: "1px solid #E5DFD5",
       }}
     >
       <div
@@ -80,42 +83,42 @@ export default function StatusFeedMoment() {
       >
         {/* Left: Headline */}
         <div>
-          <p
-            style={{
-              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-              fontWeight: 500,
-              fontSize: "0.8125rem",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "#C6841F",
-              marginBottom: "1rem",
-            }}
-          >
-            Ongoing monitoring
-          </p>
           <h2
             style={{
-              fontFamily: '"Times New Roman", Georgia, serif',
+              fontFamily: 'Syne, sans-serif',
+              textTransform: "lowercase",
               fontWeight: 700,
               fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)",
-              color: "#0B1220",
+              color: "#061508",
               letterSpacing: "-0.02em",
               lineHeight: 1.2,
               marginBottom: "1.25rem",
             }}
           >
-            You don't have to keep checking.
+            Don't lose an application after you submit it.
           </h2>
           <p
             style={{
               fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
               fontWeight: 400,
               fontSize: "1.0625rem",
-              color: "#4C577A",
+              color: "#2A3B2D",
+              lineHeight: 1.65,
+              marginBottom: "1rem",
+            }}
+          >
+            Applications don't end when you press submit.
+          </p>
+          <p
+            style={{
+              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
+              fontWeight: 400,
+              fontSize: "1.0625rem",
+              color: "#2A3B2D",
               lineHeight: 1.65,
             }}
           >
-            While you focus on what matters, your agent keeps tabs on every application — catching status changes, flagging required actions, and notifying you only when you need to act.
+            Your agent keeps the important context together and helps you understand what happens next.
           </p>
         </div>
 
@@ -123,32 +126,26 @@ export default function StatusFeedMoment() {
         <div
           ref={ref}
           style={{
-            background: "#FCFAF6",
-            border: "1px solid #E4DDCF",
+            background: "#fff",
+            border: "1px solid #E5DFD5",
             borderRadius: "1rem",
             overflow: "hidden",
-            boxShadow: "0 4px 10px -2px rgba(11,18,32,0.08)",
+            boxShadow: "0 4px 10px -2px rgba(10,39,13,0.08)",
           }}
         >
           {/* Card header */}
           <div
             style={{
               padding: "1rem 1.25rem",
-              borderBottom: "1px solid #F1EDE4",
+              borderBottom: "1px solid #E5DFD5",
               display: "flex",
               alignItems: "center",
               gap: "0.5rem",
+              background: "#FAFAF8",
             }}
           >
-            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#4B7A5E" }} />
-            <span
-              style={{
-                fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-                fontWeight: 600,
-                fontSize: "0.8125rem",
-                color: "#333D5C",
-              }}
-            >
+            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#4CAF50" }} />
+            <span style={{ fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif', fontWeight: 600, fontSize: "0.8125rem", color: "#1B5E20" }}>
               Application Activity
             </span>
           </div>
@@ -168,7 +165,6 @@ export default function StatusFeedMoment() {
                   opacity: 0,
                 }}
               >
-                {/* Status icon */}
                 <div
                   style={{
                     width: "28px",
@@ -186,28 +182,11 @@ export default function StatusFeedMoment() {
                 >
                   {item.icon}
                 </div>
-
-                {/* Text */}
                 <div>
-                  <p
-                    style={{
-                      fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-                      fontWeight: 600,
-                      fontSize: "0.875rem",
-                      color: "#0B1220",
-                      marginBottom: "2px",
-                    }}
-                  >
+                  <p style={{ fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif', fontWeight: 700, fontSize: "0.875rem", color: "#061508", marginBottom: "3px" }}>
                     {item.label}
                   </p>
-                  <p
-                    style={{
-                      fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-                      fontWeight: 400,
-                      fontSize: "0.8125rem",
-                      color: "#8C816C",
-                    }}
-                  >
+                  <p style={{ fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif', fontWeight: 400, fontSize: "0.8125rem", color: "#2A3B2D", lineHeight: 1.5 }}>
                     {item.sub}
                   </p>
                 </div>
@@ -219,10 +198,7 @@ export default function StatusFeedMoment() {
 
       <style>{`
         @media (max-width: 768px) {
-          .feed-grid {
-            grid-template-columns: 1fr !important;
-            gap: 2.5rem !important;
-          }
+          .feed-grid { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
         }
       `}</style>
     </section>

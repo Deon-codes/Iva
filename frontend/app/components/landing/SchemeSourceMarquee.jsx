@@ -18,16 +18,13 @@ const SOURCES = [
 ];
 
 export default function SchemeSourceMarquee() {
-  // Duplicate for seamless loop
   const items = [...SOURCES, ...SOURCES];
 
   return (
     <section
       style={{
-        padding: "4rem 0",
-        background: "#F1EDE4",
-        borderTop: "1px solid #E4DDCF",
-        borderBottom: "1px solid #E4DDCF",
+        padding: "3.5rem 0",
+        background: "#061508",
         overflow: "hidden",
       }}
     >
@@ -40,11 +37,12 @@ export default function SchemeSourceMarquee() {
           fontSize: "0.8125rem",
           letterSpacing: "0.1em",
           textTransform: "uppercase",
-          color: "#8C816C",
-          marginBottom: "2rem",
+          color: "#4CAF50",
+          marginBottom: "1.75rem",
+          opacity: 0.8,
         }}
       >
-        We check schemes against official government sources
+        Checks against official government sources
       </p>
 
       {/* Marquee */}
@@ -61,7 +59,7 @@ export default function SchemeSourceMarquee() {
                 fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
                 fontWeight: 500,
                 fontSize: "0.9375rem",
-                color: "#4C577A",
+                color: "#D5CDC0",
               }}
             >
               {source}
@@ -69,14 +67,13 @@ export default function SchemeSourceMarquee() {
                 aria-hidden="true"
                 style={{
                   display: "inline-block",
-                  width: "4px",
-                  height: "4px",
-                  borderRadius: "50%",
-                  background: "#C6841F",
+                  color: "#2E7D32",
                   marginLeft: "2.5rem",
-                  opacity: 0.7,
+                  fontSize: "1.1rem",
                 }}
-              />
+              >
+                ✦
+              </span>
             </span>
           ))}
         </div>

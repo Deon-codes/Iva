@@ -11,20 +11,20 @@ export default function Hero() {
         justifyContent: "center",
         textAlign: "center",
         padding: "8rem 2rem 6rem",
-        background: "#FAF8F4",
+        background: "#F3EFE9",
         position: "relative",
         overflow: "hidden",
       }}
     >
-      {/* Subtle background texture */}
+      {/* Subtle radial gradient texture */}
       <div
         aria-hidden="true"
         style={{
           position: "absolute",
           inset: 0,
           backgroundImage:
-            "radial-gradient(circle at 60% 20%, rgba(198,132,31,0.06) 0%, transparent 55%), " +
-            "radial-gradient(circle at 20% 80%, rgba(35,43,69,0.04) 0%, transparent 50%)",
+            "radial-gradient(circle at 60% 20%, rgba(46,125,50,0.07) 0%, transparent 55%), " +
+            "radial-gradient(circle at 20% 80%, rgba(10,39,13,0.05) 0%, transparent 50%)",
           pointerEvents: "none",
         }}
       />
@@ -36,30 +36,30 @@ export default function Hero() {
             fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
             fontWeight: 500,
             fontSize: "0.8125rem",
-            letterSpacing: "0.12em",
+            letterSpacing: "0.14em",
             textTransform: "uppercase",
-            color: "#C6841F",
+            color: "#2E7D32",
             marginBottom: "1.5rem",
           }}
         >
-          Government Schemes &amp; Scholarships
+          Your Personal Scheme Agent
         </p>
 
         {/* Display headline */}
         <h1
           style={{
-            fontFamily: '"Times New Roman", Georgia, serif',
+            fontFamily: 'Syne, sans-serif',
+            textTransform: "lowercase",
             fontWeight: 700,
             fontSize: "clamp(2.5rem, 6vw, 3.75rem)",
             lineHeight: 1.12,
             letterSpacing: "-0.02em",
-            color: "#0B1220",
+            color: "#061508",
             marginBottom: "1.5rem",
           }}
         >
-          Stop chasing scholarships.
-          <br />
-          <span style={{ color: "#333D5C" }}>Let your agent handle the paperwork.</span>
+          Stop searching.{" "}
+          <span style={{ color: "#2E7D32" }}>Start getting things done.</span>
         </h1>
 
         {/* Supporting copy */}
@@ -69,13 +69,12 @@ export default function Hero() {
             fontWeight: 400,
             fontSize: "1.125rem",
             lineHeight: 1.65,
-            color: "#4C577A",
-            maxWidth: "520px",
+            color: "#2A3B2D",
+            maxWidth: "560px",
             margin: "0 auto 2.5rem",
           }}
         >
-          Hazela finds government schemes you qualify for, prepares your application,
-          and keeps watching — so you never miss an opportunity.
+          Tell us what you need, and your agent finds the government schemes and scholarships you may be eligible for, verifies where they came from, helps prepare your application, and keeps track of what happens next.
         </p>
 
         {/* CTA row */}
@@ -92,7 +91,7 @@ export default function Hero() {
             href="/signup"
             style={{
               display: "inline-block",
-              background: "#C6841F",
+              background: "#2E7D32",
               color: "#fff",
               fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
               fontWeight: 600,
@@ -100,83 +99,64 @@ export default function Hero() {
               padding: "0.875rem 2rem",
               borderRadius: "9999px",
               textDecoration: "none",
-              boxShadow: "0 4px 14px -2px rgba(198,132,31,0.35)",
+              boxShadow: "0 4px 14px -2px rgba(46,125,50,0.35)",
               transition: "background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease",
             }}
-
             onMouseEnter={e => {
-              e.currentTarget.style.background = "#A66A16";
+              e.currentTarget.style.background = "#2A3B2D";
               e.currentTarget.style.transform = "translateY(-1px)";
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.background = "#C6841F";
+              e.currentTarget.style.background = "#2E7D32";
               e.currentTarget.style.transform = "translateY(0)";
             }}
           >
             Get Started
           </a>
           <a
-            href="#how-it-works"
+            href="/login"
             style={{
               display: "inline-block",
               background: "transparent",
-              color: "#232B45",
+              color: "#061508",
               fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
               fontWeight: 600,
               fontSize: "1rem",
               padding: "0.875rem 2rem",
               borderRadius: "9999px",
               textDecoration: "none",
-              border: "1.5px solid #A7AFC6",
+              border: "1.5px solid #D5CDC0",
               transition: "border-color 0.2s ease, color 0.2s ease",
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.borderColor = "#333D5C";
-              e.currentTarget.style.color = "#0B1220";
+              e.currentTarget.style.borderColor = "#2E7D32";
+              e.currentTarget.style.color = "#061508";
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.borderColor = "#A7AFC6";
-              e.currentTarget.style.color = "#232B45";
+              e.currentTarget.style.borderColor = "#D5CDC0";
+              e.currentTarget.style.color = "#061508";
             }}
           >
-            See how it works
+            Sign In
           </a>
         </div>
 
-        {/* Trust micro-signal */}
+        {/* Small supporting line */}
         <p
           style={{
             marginTop: "2.5rem",
             fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-            fontSize: "0.8125rem",
-            color: "#8C816C",
-            letterSpacing: "0.03em",
+            fontSize: "0.875rem",
+            color: "#2E7D32",
+            letterSpacing: "0.08em",
+            fontWeight: 500,
           }}
         >
-          Checks against official government sources &nbsp;·&nbsp; No hidden fees
+          Find → Verify → Apply → Track
         </p>
       </div>
 
-      {/* Scroll indicator */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          bottom: "2.5rem",
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "6px",
-          opacity: 0.4,
-        }}
-      >
-        <div style={{ width: "1px", height: "40px", background: "#0B1220" }} />
-        <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-          <path d="M1 1L5 5L9 1" stroke="#0B1220" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </div>
+
     </section>
   );
 }

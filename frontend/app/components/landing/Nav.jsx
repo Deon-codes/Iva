@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { SlideTabs } from "../ui/slide-tabs";
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -14,89 +15,110 @@ export default function Nav() {
     <header
       style={{
         position: "fixed",
-        top: 0,
+        top: scrolled ? "0.75rem" : "1.25rem",
         left: 0,
         right: 0,
         zIndex: 50,
-        transition: "background 0.3s ease, box-shadow 0.3s ease",
-        background: scrolled ? "rgba(250,248,244,0.92)" : "transparent",
-        backdropFilter: scrolled ? "blur(12px)" : "none",
-        boxShadow: scrolled ? "0 1px 0 0 #D3D7E3" : "none",
+        transition: "top 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        padding: "0 1.5rem",
       }}
     >
       <div
         style={{
           maxWidth: "1200px",
           margin: "0 auto",
-          padding: "0 2rem",
           height: "64px",
-          display: "flex",
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
           alignItems: "center",
-          justifyContent: "space-between",
+          background: "rgba(6, 21, 8, 0.95)",
+          backdropFilter: "blur(12px)",
+          borderRadius: "9999px",
+          border: "1px solid rgba(165, 214, 167, 0.15)",
+          padding: "0 2rem",
+          boxShadow: "0 10px 30px -10px rgba(6, 21, 8, 0.4)",
         }}
       >
-        {/* Wordmark */}
-        <a
-          href="/"
-          style={{
-            fontFamily: '"Times New Roman", Georgia, serif',
-            fontWeight: 700,
-            fontSize: "1.5rem",
-            color: "#0B1220",
-            textDecoration: "none",
-            letterSpacing: "-0.02em",
-          }}
-        >
-          hazela
-        </a>
+        {/* Left: Wordmark logo */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <a
+            href="/"
+            style={{
+              fontFamily: 'Syne, sans-serif',
+              textTransform: "lowercase",
+              fontWeight: 700,
+              fontSize: "1.5rem",
+              color: "#F3EFE9",
+              textDecoration: "none",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Hazela
+          </a>
+        </div>
 
-        {/* Nav links */}
-        <nav style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-          <a href="#how-it-works" className="nav-link" style={navLinkStyle}>How it works</a>
-          <a href="#features" className="nav-link" style={navLinkStyle}>Features</a>
-          <a href="#trust" className="nav-link" style={navLinkStyle}>About</a>
+        {/* Center: Centrally aligned SlideTabs */}
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <SlideTabs
+            tabs={[
+              { label: "How it works", href: "#how-it-works" },
+              { label: "What you can do", href: "#what-you-can-do" },
+            ]}
+            onTabSelect={(tab) => {
+              const element = document.querySelector(tab.href);
+              if (element) {
+                element.scrollIntoView({ behavior: "smooth" });
+              } else {
+                window.location.hash = tab.href;
+              }
+            }}
+          />
+        </div>
+
+        {/* Right: Action buttons */}
+        <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", justifyContent: "flex-end" }}>
           <a
             href="/login"
             style={{
-              ...navLinkStyle,
-              color: "#0B1220",
+              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
               fontWeight: 600,
+              fontSize: "0.9375rem",
+              color: "#D5CDC0",
+              textDecoration: "none",
+              transition: "color 0.2s",
               padding: "0.5rem 1rem",
             }}
+            onMouseEnter={e => (e.target.style.color = "#F3EFE9")}
+            onMouseLeave={e => (e.target.style.color = "#D5CDC0")}
           >
             Sign In
           </a>
           <a
             href="/signup"
             style={{
-              background: "#C6841F",
+              background: "#2E7D32",
               color: "#fff",
               fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
               fontWeight: 600,
               fontSize: "0.9375rem",
-              padding: "0.5rem 1.25rem",
+              padding: "0.625rem 1.375rem",
               borderRadius: "9999px",
               textDecoration: "none",
-              transition: "background 0.2s ease",
-              letterSpacing: "0.01em",
+              transition: "background 0.2s ease, transform 0.2s ease",
             }}
-            onMouseEnter={e => (e.target.style.background = "#A66A16")}
-            onMouseLeave={e => (e.target.style.background = "#C6841F")}
+            onMouseEnter={e => {
+              e.target.style.background = "#2A3B2D";
+              e.target.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={e => {
+              e.target.style.background = "#2E7D32";
+              e.target.style.transform = "translateY(0)";
+            }}
           >
             Get Started
           </a>
-        </nav>
-
+        </div>
       </div>
     </header>
   );
 }
-
-const navLinkStyle = {
-  fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-  fontWeight: 500,
-  fontSize: "0.9375rem",
-  color: "#333D5C",
-  textDecoration: "none",
-  transition: "color 0.2s ease",
-};

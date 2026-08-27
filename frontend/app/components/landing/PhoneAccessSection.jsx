@@ -1,15 +1,24 @@
+"use client";
+
 export default function PhoneAccessSection() {
   return (
     <section
       style={{
-        padding: "5rem 2rem",
-        background: "#FAF8F4",
+        padding: "6rem 2rem",
+        background: "#F3EFE9",
+        borderTop: "1px solid #E5DFD5",
+        borderBottom: "1px solid #E5DFD5",
       }}
     >
       <div
         style={{
-          maxWidth: "760px",
+          maxWidth: "680px",
           margin: "0 auto",
+          background: "#FFFFFF",
+          border: "1px solid #E5DFD5",
+          borderRadius: "1.5rem",
+          padding: "3.5rem 2.5rem",
+          boxShadow: "0 8px 30px rgba(6, 21, 8, 0.03)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -17,66 +26,67 @@ export default function PhoneAccessSection() {
           gap: "1.75rem",
         }}
       >
-        {/* Voice icon */}
+        {/* Icon */}
         <div
           style={{
             width: "64px",
             height: "64px",
+            borderRadius: "50%",
+            background: "#F3EFE9",
+            border: "1px solid #D5CDC0",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#4C577A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            {/* Phone handset */}
-            <path d="M10 14a4 4 0 014-4h3l3 8-4 2a24 24 0 0010 10l2-4 8 3v3a4 4 0 01-4 4C17 36 10 28 10 14z" />
-            {/* Waveform beside phone */}
-            <line x1="32" y1="16" x2="32" y2="24" />
-            <line x1="36" y1="12" x2="36" y2="28" />
-            <line x1="40" y1="16" x2="40" y2="24" />
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#2E7D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 8a2 2 0 012-2h2l2 5-2.5 1.5a14 14 0 006 6L17 16l5 2v2a2 2 0 01-2 2C10 22 6 16 6 8z" />
+            <line x1="19" y1="9" x2="19" y2="14" />
+            <line x1="22" y1="7" x2="22" y2="16" />
           </svg>
         </div>
 
-        {/* Headline */}
+        {/* Text */}
         <div>
           <h2
             style={{
-              fontFamily: '"Times New Roman", Georgia, serif',
+              fontFamily: 'Syne, sans-serif',
+              textTransform: "lowercase",
               fontWeight: 700,
-              fontSize: "clamp(1.5rem, 3vw, 2rem)",
-              color: "#0B1220",
+              fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
+              color: "#061508",
               letterSpacing: "-0.02em",
-              marginBottom: "0.875rem",
+              marginBottom: "1rem",
+              lineHeight: 1.2,
             }}
           >
-            No smartphone? No problem.
+            No smartphone? You can still ask for help.
           </h2>
           <p
             style={{
               fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
               fontWeight: 400,
               fontSize: "1.0625rem",
-              color: "#4C577A",
+              color: "#2A3B2D",
               lineHeight: 1.65,
-              maxWidth: "480px",
+              maxWidth: "520px",
+              margin: "0 auto 1.25rem",
             }}
           >
-            Hazela is built for every student — including those without a smartphone. Access scheme discovery and application status updates over a basic phone call or voice service.
+            The agent is designed to extend beyond the screen. With phone-based access, users can ask about relevant schemes, hear important updates, and understand what action is needed without relying entirely on a smartphone or web interface.
+          </p>
+          <p
+            style={{
+              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
+              fontWeight: 600,
+              fontSize: "0.9375rem",
+              color: "#2E7D32",
+              lineHeight: 1.5,
+            }}
+          >
+            Because access to government benefits shouldn't depend on how comfortable you are with apps.
           </p>
         </div>
-
-        {/* Subtle note */}
-        <p
-          style={{
-            fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-            fontWeight: 400,
-            fontSize: "0.875rem",
-            color: "#B0A48D",
-            fontStyle: "italic",
-          }}
-        >
-          Voice accessibility — coming soon
-        </p>
       </div>
     </section>
   );

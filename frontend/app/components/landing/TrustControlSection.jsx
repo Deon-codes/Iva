@@ -1,12 +1,22 @@
+"use client";
+
 export default function TrustControlSection() {
+  const points = [
+    "Official source verification",
+    "Eligibility information cross-checked",
+    "Suspicious claims highlighted",
+    "Scam indicators surfaced",
+    "No pretending that an unofficial source is government-approved",
+  ];
+
   return (
     <section
       id="trust"
       style={{
         padding: "7rem 2rem",
-        background: "#F1EDE4",
-        borderTop: "1px solid #E4DDCF",
-        borderBottom: "1px solid #E4DDCF",
+        background: "#061508",
+        borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+        borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
       }}
     >
       <div
@@ -22,58 +32,81 @@ export default function TrustControlSection() {
       >
         {/* Left: Text */}
         <div>
-          <p
-            style={{
-              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-              fontWeight: 500,
-              fontSize: "0.8125rem",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "#B0A48D",
-              marginBottom: "1rem",
-            }}
-          >
-            Your agent, your control
-          </p>
           <h2
             style={{
-              fontFamily: '"Times New Roman", Georgia, serif',
+              fontFamily: 'Syne, sans-serif',
+              textTransform: "lowercase",
               fontWeight: 700,
               fontSize: "clamp(1.625rem, 3vw, 2.25rem)",
-              color: "#0B1220",
+              color: "#F3EFE9",
               letterSpacing: "-0.02em",
               lineHeight: 1.2,
               marginBottom: "1.5rem",
             }}
           >
-            Your agent handles the work. You make the important decisions.
+            Before you apply, know who you're dealing with.
           </h2>
           <p
             style={{
               fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
               fontWeight: 400,
               fontSize: "1.0625rem",
-              color: "#4C577A",
+              color: "#D5CDC0",
               lineHeight: 1.65,
-              marginBottom: "1.25rem",
+              marginBottom: "1rem",
             }}
           >
-            Your agent can research, prepare, and assemble everything — but it never submits on your behalf without a clear confirmation from you.
+            Government schemes are often shared through messages, social media posts, and forwarded links.
           </p>
           <p
             style={{
               fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
               fontWeight: 400,
               fontSize: "1.0625rem",
-              color: "#4C577A",
+              color: "#D5CDC0",
               lineHeight: 1.65,
+              marginBottom: "1.5rem",
             }}
           >
-            Identity verification and OTP-based authorisation are always manual steps — handled directly by you, never automated. Your Aadhaar and sensitive documents stay yours.
+            Not every opportunity you see online is legitimate.
           </p>
+          <p
+            style={{
+              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
+              fontWeight: 400,
+              fontSize: "1.0625rem",
+              color: "#D5CDC0",
+              lineHeight: 1.65,
+              marginBottom: "1.5rem",
+            }}
+          >
+            Your agent checks scheme information against official sources and surfaces warning signs before you continue.
+          </p>
+
+          {/* Highlight box */}
+          <div
+            style={{
+              background: "#0c2210",
+              border: "1px solid rgba(165, 214, 167, 0.15)",
+              borderRadius: "0.75rem",
+              padding: "1rem 1.25rem",
+            }}
+          >
+            <p
+              style={{
+                fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
+                fontWeight: 600,
+                fontSize: "0.9375rem",
+                color: "#A5D6A7",
+                lineHeight: 1.5,
+              }}
+            >
+              If something looks suspicious, you'll know before you hand over your information.
+            </p>
+          </div>
         </div>
 
-        {/* Right: Flow diagram */}
+        {/* Right: Checklist */}
         <div>
           <p
             style={{
@@ -82,104 +115,54 @@ export default function TrustControlSection() {
               fontSize: "0.75rem",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "#B0A48D",
+              color: "#A5D6A7",
               marginBottom: "1.5rem",
             }}
           >
-            How decisions flow
+            What your agent checks
           </p>
 
-          {/* Flow nodes */}
-          {[
-            { label: "Profile matched to schemes", agent: true },
-            { label: "Documents assembled", agent: true },
-            { label: "Application drafted", agent: true },
-            { label: "You review & confirm", agent: false, highlight: true },
-            { label: "OTP verification", agent: false },
-            { label: "Submission & tracking", agent: true },
-          ].map((node, i, arr) => (
-            <div key={i}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            {points.map((point, i) => (
               <div
+                key={i}
                 style={{
+                  padding: "0.875rem 0",
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "flex-start",
                   gap: "0.875rem",
-                  padding: "0.75rem 1rem",
-                  background: node.highlight
-                    ? "#0B1220"
-                    : node.agent
-                    ? "#FCFAF6"
-                    : "#FAF8F4",
-                  border: `1px solid ${node.highlight ? "#0B1220" : "#E4DDCF"}`,
-                  borderRadius: "0.5rem",
-                  transition: "box-shadow 0.2s",
+                  borderBottom: i < points.length - 1 ? "1px solid rgba(255, 255, 255, 0.05)" : "none",
                 }}
               >
-                {/* Dot */}
                 <div
                   style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: node.highlight ? "#C6841F" : node.agent ? "#4B7A5E" : "#A7AFC6",
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-                    fontWeight: node.highlight ? 600 : 400,
-                    fontSize: "0.875rem",
-                    color: node.highlight ? "#FAF8F4" : "#232B45",
-                    flex: 1,
-                  }}
-                >
-                  {node.label}
-                </span>
-                <span
-                  style={{
-                    fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-                    fontSize: "0.75rem",
-                    fontWeight: 500,
-                    color: node.highlight ? "#C6841F" : node.agent ? "#4B7A5E" : "#8C816C",
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {node.highlight ? "You" : node.agent ? "Agent" : "You"}
-                </span>
-              </div>
-
-              {/* Connector */}
-              {i < arr.length - 1 && (
-                <div
-                  style={{
-                    width: "1px",
+                    width: "20px",
                     height: "20px",
-                    background: "#D3D7E3",
-                    margin: "0 auto",
-                    marginLeft: "1.375rem",
+                    borderRadius: "50%",
+                    background: "#0c2210",
+                    border: "1px solid rgba(165, 214, 167, 0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    marginTop: "1px",
                   }}
-                />
-              )}
-            </div>
-          ))}
-
-          {/* Legend */}
-          <div
-            style={{
-              display: "flex",
-              gap: "1.25rem",
-              marginTop: "1.5rem",
-            }}
-          >
-            {[
-              { color: "#4B7A5E", label: "Agent handles" },
-              { color: "#C6841F", label: "You decide" },
-            ].map(l => (
-              <div key={l.label} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: l.color }} />
-                <span style={{ fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif', fontSize: "0.75rem", color: "#8C816C" }}>{l.label}</span>
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <polyline points="2,5 4,7 8,3" stroke="#A5D6A7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <span
+                  style={{
+                    fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
+                    fontWeight: 400,
+                    fontSize: "0.9375rem",
+                    color: "#D5CDC0",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {point}
+                </span>
               </div>
             ))}
           </div>
@@ -188,10 +171,7 @@ export default function TrustControlSection() {
 
       <style>{`
         @media (max-width: 768px) {
-          .trust-grid {
-            grid-template-columns: 1fr !important;
-            gap: 3rem !important;
-          }
+          .trust-grid { grid-template-columns: 1fr !important; gap: 3rem !important; }
         }
       `}</style>
     </section>
