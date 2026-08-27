@@ -8,10 +8,20 @@ and uses in-memory stubs so tests / local dev work without GCP access.
 from __future__ import annotations
 
 import logging
+import os
+from pathlib import Path
 from typing import List
 
+from dotenv import load_dotenv
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Load .env file into os.environ for Gemini and Google ADK SDKs
+env_path = Path(__file__).resolve().parent.parent / ".env"
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+else:
+    load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +41,7 @@ class Settings(BaseSettings):
 
     # ── Gemini ────────────────────────────────────────────────────────────────
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.0-flash"
+    gemini_model: str = "gemini-3.6-flash"
 
     # ── Google Cloud / Firestore ───────────────────────────────────────────────
     google_cloud_project: str = ""
@@ -84,3 +94,4 @@ class Settings(BaseSettings):
 
 # Singleton — import this everywhere
 settings = Settings()
+
