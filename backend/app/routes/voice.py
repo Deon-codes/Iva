@@ -134,3 +134,179 @@ async def voice_mock(request: MockVoiceRequest):
     except Exception as exc:
         logger.error("Error in voice_mock: %s", exc)
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+import base64
+import json
+import asyncio
+import struct
+import math
+from fastapi import WebSocket, WebSocketDisconnect
+from app.services.speech_service import speech_service
+
+# Helper for silence detection
+def calculate_rms(audio_chunk: bytes) -> float:
+    count = len(audio_chunk) // 2
+    if count == 0:
+        return 0.0
+    format_string = f"{count}h"
+    try:
+        shorts = struct.unpack(format_string, audio_chunk)
+    except struct.error:
+        return 0.0
+    sum_squares = 0.0
+    for sample in shorts:
+        n = sample / 32768.0
+        sum_squares += n * n
+    return math.sqrt(sum_squares / count)
+
+
+@router.websocket("/ws")
+async def exotel_ws(websocket: WebSocket):
+    """
+    Exotel Voicebot WebSocket Integration Endpoint.
+    Manages live bidirectional binary audio stream, transcribes caller speech,
+    queries Hazela orchestrator, and synthesizes audio responses.
+    """
+    await websocket.accept()
+    logger.info("EXOTEL WS CONNECTED")
+    
+    stream_sid = None
+    session = None
+    sample_rate = 8000 # default fallback
+    
+    # State variables for speech / silence tracking
+    audio_buffer = bytearray()
+    has_speech = False
+    silence_duration_ms = 0
+    silence_threshold = 0.015 # 1.5% amplitude threshold for speech detection
+    silence_timeout_ms = 1500 # 1.5s of silence considered end of turn
+    min_speech_duration_ms = 800 # Filter out transient noises under 0.8s
+    
+    async def stream_audio_to_exotel(audio_bytes: bytes, current_sid: str, current_rate: int):
+        """Helper to stream PCM audio back to Exotel in 100ms chunks."""
+        # 100ms chunk size = sample_rate * 2 bytes/sample * 0.1s
+        chunk_size = int(current_rate * 0.2)
+        logger.info("Exotel outbound streaming started (total: %d bytes, chunk size: %d bytes)...", len(audio_bytes), chunk_size)
+        for i in range(0, len(audio_bytes), chunk_size):
+            chunk = audio_bytes[i:i + chunk_size]
+            # Zero-pad chunk if it is smaller than chunk_size (required for raw PCM stream sync)
+            if len(chunk) < chunk_size:
+                chunk += b'\x00' * (chunk_size - len(chunk))
+            
+            payload = base64.b64encode(chunk).decode("utf-8")
+            media_event = {
+                "event": "media",
+                "streamSid": current_sid,
+                "media": {
+                    "payload": payload
+                }
+            }
+            await websocket.send_json(media_event)
+            await asyncio.sleep(0.1) # Pace output in real-time
+        logger.info("EXOTEL AUDIO SENT")
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+            msg = json.loads(data)
+            event = msg.get("event")
+            
+            if event == "connected":
+                logger.info("EXOTEL WS CONNECTED EVENT")
+                
+            elif event == "start":
+                logger.info("EXOTEL CALL STARTED")
+                start_block = msg.get("start", {})
+                stream_sid = msg.get("streamSid") or msg.get("stream_sid") or start_block.get("streamSid") or start_block.get("stream_sid")
+                
+                # Retrieve sample rate
+                rate_val = start_block.get("sampleRate") or websocket.query_params.get("sample-rate")
+                if rate_val:
+                    try:
+                        sample_rate = int(rate_val)
+                    except ValueError:
+                        sample_rate = 8000
+                else:
+                    sample_rate = 8000
+                    
+                phone_number = start_block.get("customParameters", {}).get("phone") or start_block.get("from") or start_block.get("callerId") or "+910000000000"
+                logger.info("EXOTEL SESSION START - StreamSid: %s, Phone: %s, Rate: %dHz", stream_sid, phone_number, sample_rate)
+                
+                # Fetch or create the session
+                session = await voice_service.get_or_create_session(stream_sid, phone_number)
+                
+                # Play greeting immediately
+                if session["is_mock"]:
+                    greeting_text = "[MOCK SIMULATION] Welcome to the Hazela Mock Voice System. This is a testing simulation and NOT a real government service. Aap sarkari yojana aur scholarship ke baare mein kya jaana chahte hain?"
+                else:
+                    greeting_text = "Namaste. Main aapki sarkari yojana aur scholarship application mein madad karne ke liye hoon. Aap kya jaana chahte hain?"
+                
+                greeting_audio = await speech_service.synthesize_text(greeting_text, session["language"], sample_rate)
+                await stream_audio_to_exotel(greeting_audio, stream_sid, sample_rate)
+                
+            elif event == "media":
+                media_block = msg.get("media", {})
+                payload = media_block.get("payload")
+                if payload and stream_sid and session:
+                    chunk = base64.b64decode(payload)
+                    chunk_rms = calculate_rms(chunk)
+                    
+                    if chunk_rms > silence_threshold:
+                        has_speech = True
+                        silence_duration_ms = 0
+                        audio_buffer.extend(chunk)
+                    else:
+                        silence_duration_ms += 100 # each chunk represents ~100ms
+                        if has_speech:
+                            audio_buffer.extend(chunk)
+                            if silence_duration_ms >= silence_timeout_ms:
+                                logger.info("EXOTEL SILENCE DETECTED, PROCESSING UTTERANCE...")
+                                
+                                # Process speech
+                                duration_ms = len(audio_buffer) / (sample_rate * 2) * 1000
+                                if duration_ms >= min_speech_duration_ms:
+                                    logger.info("EXOTEL TRANSCRIPT: [transcribing]")
+                                    try:
+                                        transcript = await speech_service.transcribe_audio(
+                                            bytes(audio_buffer),
+                                            session["language"],
+                                            sample_rate,
+                                            session
+                                        )
+                                        
+                                        if transcript.strip():
+                                            logger.info("EXOTEL TRANSCRIPT: %s", transcript)
+                                            response_text = await voice_service.process_utterance(stream_sid, transcript)
+                                            logger.info("HAZELA RESPONSE: %s", response_text)
+                                            
+                                            response_audio = await speech_service.synthesize_text(
+                                                response_text,
+                                                session["language"],
+                                                sample_rate
+                                            )
+                                            await stream_audio_to_exotel(response_audio, stream_sid, sample_rate)
+                                        else:
+                                            logger.info("EXOTEL TRANSCRIPT: [empty or silent]")
+                                    except Exception as err:
+                                        logger.error("Error processing stream utterance: %s", err, exc_info=True)
+                                
+                                # Reset buffer & states
+                                audio_buffer = bytearray()
+                                has_speech = False
+                                silence_duration_ms = 0
+                                
+            elif event == "stop":
+                logger.info("EXOTEL CALL ENDED")
+                if stream_sid:
+                    voice_service.clean_session(stream_sid)
+                break
+                
+    except WebSocketDisconnect:
+        logger.info("EXOTEL WS DISCONNECTED")
+        if stream_sid:
+            voice_service.clean_session(stream_sid)
+    except Exception as exc:
+        logger.error("Error in exotel_ws lifecycle: %s", exc, exc_info=True)
+        if stream_sid:
+            voice_service.clean_session(stream_sid)

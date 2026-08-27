@@ -5,6 +5,7 @@ from unittest.mock import patch
 # Set environment variables for testing before importing app
 import os
 os.environ["MOCK_VOICE_MODE"] = "true"
+os.environ["VOICE_WEBHOOK_BASE_URL"] = "https://garlic-okay-sabbath.ngrok-free.dev"
 
 from app.main import app
 from app.services.voice_service import voice_service
@@ -18,6 +19,12 @@ def clean_sessions():
     voice_service.sessions.clear()
 
 
+def test_mock_voice_mode_respected_at_startup():
+    """Verify that MOCK_VOICE_MODE=true is respected when the application starts."""
+    from app.services.voice_service import MOCK_VOICE_MODE
+    assert MOCK_VOICE_MODE is True
+
+
 def test_1_incoming_call_returns_valid_provider_response():
     """Test 1: Incoming call returns valid provider response (TwiML XML)."""
     response = client.post(
@@ -29,6 +36,7 @@ def test_1_incoming_call_returns_valid_provider_response():
     assert "<Response>" in response.text
     assert "<Say" in response.text
     assert "<Gather" in response.text
+    assert 'action="https://garlic-okay-sabbath.ngrok-free.dev/api/voice/respond"' in response.text
 
 
 def test_2_and_3_speech_passed_and_converted_to_voice():

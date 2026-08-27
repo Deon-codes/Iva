@@ -3,8 +3,14 @@ import logging
 import uuid
 from typing import Dict, Any, Optional
 from twilio.twiml.voice_response import VoiceResponse, Gather
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+
+# Load the root .env file robustly relative to this source file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+dotenv_path = os.path.abspath(os.path.join(current_dir, "..", "..", "..", ".env"))
+load_dotenv(dotenv_path)
 
 # Configured mock mode check
 MOCK_VOICE_MODE = os.getenv("MOCK_VOICE_MODE", "false").lower() == "true"
@@ -179,6 +185,13 @@ class VoiceService:
         """Generates a standard TwiML with Say and Gather verbs."""
         response = VoiceResponse()
         
+        # Build absolute URL using VOICE_WEBHOOK_BASE_URL if configured
+        base_url = os.getenv("VOICE_WEBHOOK_BASE_URL", "").rstrip("/")
+        if base_url and action_url.startswith("/"):
+            absolute_action_url = f"{base_url}{action_url}"
+        else:
+            absolute_action_url = action_url
+
         # Indian voices for natural pronunciation
         if language == "hi":
             voice = "Polly.Aditi"
@@ -192,7 +205,7 @@ class VoiceService:
         # Add Gather to collect the next response
         gather = Gather(
             input="speech",
-            action=action_url,
+            action=absolute_action_url,
             method="POST",
             language=twilio_lang,
             timeout=5,
