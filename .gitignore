@@ -24,19 +24,5 @@ Thumbs.db
 *.njsproj
 *.sln
 *.swp
-
-# Google Cloud service account keys — NEVER commit these
-*service-account*.json
-*service_account*.json
-*-key.json
-*credentials*.json
-
-# Pytest / coverage artefacts
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Build artefacts
-*.egg-info/
-build/
-__pypackages__/
+.freebuff/
+\.next
