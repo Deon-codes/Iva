@@ -1,14 +1,17 @@
 import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-export const SlideTabs = ({ tabs = [], onTabSelect }) => {
+export const SlideTabs = ({ tabs = [], onTabSelect, activeIndex }) => {
+  const isControlled = typeof activeIndex === "number";
+  const [internalSelected, setInternalSelected] = useState(0);
   const [position, setPosition] = useState({
     left: 0,
     width: 0,
     opacity: 0,
   });
-  const [selected, setSelected] = useState(0);
   const tabsRef = useRef([]);
+
+  const selected = isControlled ? activeIndex : internalSelected;
 
   useEffect(() => {
     const selectedTab = tabsRef.current[selected];
@@ -44,7 +47,7 @@ export const SlideTabs = ({ tabs = [], onTabSelect }) => {
           setPosition={setPosition}
           isActive={selected === i}
           onClick={() => {
-            setSelected(i);
+            if (!isControlled) setInternalSelected(i);
             if (onTabSelect) onTabSelect(tab);
           }}
         >

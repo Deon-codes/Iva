@@ -1,14 +1,49 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { SlideTabs } from "../ui/slide-tabs";
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const sectionIds = useRef(["#how-it-works", "#what-you-can-do", "#trust"]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* Track which section is visible and update active tab */
+  useEffect(() => {
+    const targets = sectionIds.current
+      .map((id) => document.querySelector(id))
+      .filter(Boolean);
+
+    if (targets.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const idx = targets.indexOf(entry.target);
+            if (idx !== -1) setActiveIndex(idx);
+          }
+        }
+      },
+      { rootMargin: "-30% 0px -60% 0px", threshold: 0 }
+    );
+
+    targets.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToSection = useCallback((href) => {
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.location.hash = href;
+    }
   }, []);
 
   return (
@@ -57,21 +92,16 @@ export default function Nav() {
           </a>
         </div>
 
-        {/* Center: Centrally aligned SlideTabs */}
+        {/* Center: SlideTabs */}
         <div style={{ display: "flex", justifyContent: "center" }}>
           <SlideTabs
             tabs={[
               { label: "How it works", href: "#how-it-works" },
               { label: "What you can do", href: "#what-you-can-do" },
+              { label: "Why Hazela", href: "#trust" },
             ]}
-            onTabSelect={(tab) => {
-              const element = document.querySelector(tab.href);
-              if (element) {
-                element.scrollIntoView({ behavior: "smooth" });
-              } else {
-                window.location.hash = tab.href;
-              }
-            }}
+            activeIndex={activeIndex}
+            onTabSelect={(tab) => scrollToSection(tab.href)}
           />
         </div>
 

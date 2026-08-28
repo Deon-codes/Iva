@@ -6,7 +6,7 @@ export default function TrustControlSection() {
     "Eligibility information cross-checked",
     "Suspicious claims highlighted",
     "Scam indicators surfaced",
-    "No pretending that an unofficial source is government-approved",
+    "Unofficial sources clearly distinguished",
   ];
 
   return (
@@ -26,11 +26,11 @@ export default function TrustControlSection() {
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           gap: "5rem",
-          alignItems: "start",
+          alignItems: "center",
         }}
         className="trust-grid"
       >
-        {/* Left: Text */}
+        {/* Left: Bloub + Text */}
         <div>
           <h2
             style={{
@@ -44,7 +44,7 @@ export default function TrustControlSection() {
               marginBottom: "1.5rem",
             }}
           >
-            Before you apply, know who you're dealing with.
+            Before you apply, know who you&apos;re dealing with.
           </h2>
           <p
             style={{
@@ -80,29 +80,39 @@ export default function TrustControlSection() {
               marginBottom: "1.5rem",
             }}
           >
-            Your agent checks scheme information against official sources and surfaces warning signs before you continue.
+            Hazela checks scheme information against trusted sources and surfaces warning signs before you continue.
           </p>
 
-          {/* Highlight box */}
+          {/* Highlight box + Bloub, side by side */}
           <div
             style={{
-              background: "#0c2210",
-              border: "1px solid rgba(165, 214, 167, 0.15)",
-              borderRadius: "0.75rem",
-              padding: "1rem 1.25rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "1.25rem",
+              justifyContent: "flex-end",
             }}
           >
-            <p
+            <div
               style={{
-                fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
-                fontWeight: 600,
-                fontSize: "0.9375rem",
-                color: "#A5D6A7",
-                lineHeight: 1.5,
+                background: "#0c2210",
+                border: "1px solid rgba(165, 214, 167, 0.15)",
+                borderRadius: "0.75rem",
+                padding: "1rem 1.25rem",
+                flex: 1,
               }}
             >
-              If something looks suspicious, you'll know before you hand over your information.
-            </p>
+              <p
+                style={{
+                  fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
+                  fontWeight: 600,
+                  fontSize: "0.9375rem",
+                  color: "#A5D6A7",
+                  lineHeight: 1.5,
+                }}
+              >
+                If something looks suspicious, you&apos;ll know before you hand over your information.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -166,6 +176,27 @@ export default function TrustControlSection() {
               </div>
             ))}
           </div>
+          {/* Bloub — placed below the checklist */}
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    marginTop: "3rem",     // moves Bloub DOWN
+    transform: "translateX(-30px)", // moves Bloub LEFT
+  }}
+>
+  <img
+    src="/bloub-suspicious.svg"
+    alt="Bloub — suspicious state"
+    className="bloub-suspicious"
+    style={{
+      width: "120px",       // increase size
+      height: "120px",      // increase size
+      objectFit: "contain",
+      filter: "drop-shadow(0 6px 20px rgba(76, 175, 80, 0.3))",
+    }}
+  />
+</div>
         </div>
       </div>
 

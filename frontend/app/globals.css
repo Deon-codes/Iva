@@ -167,17 +167,17 @@
 }
 .step-item { animation: step-in 0.3s ease forwards; }
 
-@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-.marquee-track { display: flex; width: max-content; animation: marquee 28s linear infinite; }
-.marquee-wrapper:hover .marquee-track { animation-play-state: paused; }
+/* ─── Marquee (GSAP-driven, see SchemeSourceMarquee.jsx) ─────────────────── */
+.marquee-wrapper { overflow: hidden; }
 
+/* ─── Ping dot ────────────────────────────────────────────────────────────── */
 @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
 .ping-dot { animation: ping 1s cubic-bezier(0,0,0.2,1) infinite; }
 
 /* ─── Mobile overlay ─────────────────────────────────────────────────────── */
 .mobile-overlay { position: fixed; inset: 0; background: rgba(10,39,13,0.45); z-index: 40; backdrop-filter: blur(2px); }
 
-/* ─── Legacy landing page animations ─────────────────────────────────────── */
+/* ─── Landing page animations ────────────────────────────────────────────── */
 @keyframes progress-fill { from { width: 0%; } to { width: 100%; } }
 .progress-bar-active { animation: progress-fill var(--progress-duration, 7s) linear forwards; }
 
@@ -193,10 +193,11 @@
 }
 .visual-panel-enter { animation: visual-enter 0.35s ease forwards; }
 
+/* ─── Reduced motion ─────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .progress-bar-active, .feed-item, .visual-panel-enter,
   .bloub-neutral, .bloub-attentive, .bloub-excited, .bloub-confused,
-  .bloub-suspicious, .bloub-sleepy, .bloub-surprised, .marquee-track {
+  .bloub-suspicious, .bloub-sleepy, .bloub-surprised {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

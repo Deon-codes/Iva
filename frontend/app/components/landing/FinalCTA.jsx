@@ -5,40 +5,38 @@ export default function FinalCTA() {
     <section
       id="get-started-final"
       style={{
-        padding: "9rem 2rem",
-        background: "#061508",
+        padding: "8rem 2rem 6rem",
+        background: "#F3EFE9",
         textAlign: "center",
       }}
     >
       <div style={{ maxWidth: "640px", margin: "0 auto" }}>
-        {/* Serif headline */}
         <h2
           style={{
             fontFamily: 'Syne, sans-serif',
             textTransform: "lowercase",
             fontWeight: 700,
             fontSize: "clamp(2rem, 5vw, 3.25rem)",
-            color: "#F3EFE9",
+            color: "#061508",
             letterSpacing: "-0.02em",
             lineHeight: 1.12,
             marginBottom: "1.5rem",
           }}
         >
-          There's probably more you're eligible for than you know.
+          There&apos;s probably more you&apos;re eligible for than you know.
         </h2>
 
-        {/* Sub-line */}
         <p
           style={{
             fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
             fontWeight: 400,
             fontSize: "1.0625rem",
-            color: "#D5CDC0",
+            color: "#2A3B2D",
             lineHeight: 1.65,
             marginBottom: "2.5rem",
           }}
         >
-          Tell your agent about yourself and find out what you could apply for.
+          Tell Hazela about yourself and find out what you could apply for.
         </p>
 
         {/* CTAs */}
@@ -74,36 +72,36 @@ export default function FinalCTA() {
             style={{
               display: "inline-block",
               background: "transparent",
-              color: "#D5CDC0",
+              color: "#2A3B2D",
               fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
               fontWeight: 600,
               fontSize: "1rem",
               padding: "1rem 2.5rem",
               borderRadius: "9999px",
               textDecoration: "none",
-              border: "1.5px solid #2E7D32",
+              border: "1.5px solid #D5CDC0",
               transition: "border-color 0.2s ease, color 0.2s ease",
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.borderColor = "#D5CDC0";
-              e.currentTarget.style.color = "#F3EFE9";
+              e.currentTarget.style.borderColor = "#2E7D32";
+              e.currentTarget.style.color = "#061508";
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.borderColor = "#2E7D32";
-              e.currentTarget.style.color = "#D5CDC0";
+              e.currentTarget.style.borderColor = "#D5CDC0";
+              e.currentTarget.style.color = "#2A3B2D";
             }}
           >
             Sign In
           </a>
         </div>
 
-        {/* Supporting text */}
+        {/* Supporting line */}
         <p
           style={{
             marginTop: "2rem",
             fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
             fontSize: "0.875rem",
-            color: "#4CAF50",
+            color: "#2E7D32",
             letterSpacing: "0.05em",
             fontWeight: 500,
           }}
