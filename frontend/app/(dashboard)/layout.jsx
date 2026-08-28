@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useApp } from "../context/AppContext";
 import { useRouter, usePathname } from "next/navigation";
-import { MessageCircle, Search, ClipboardList, FileText, X } from "lucide-react";
+import { MessageCircle, Search, ClipboardList, FileText, X, Bell, ChevronDown, Target, AlertTriangle, Clock } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/chat",         label: "Chat",         icon: <MessageCircle size={18} />, desc: "Agent workspace" },
@@ -18,6 +18,11 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
+  const { applications, documents, schemes } = useApp();
+
+  const urgentCount = applications.filter((a) => ["Action Required", "Preparing Application"].includes(a.status)).length +
+    documents.filter((d) => d.expiryDate !== "Never" && new Date(d.expiryDate) < new Date(Date.now() + 30 * 86400000)).length;
 
   useEffect(() => {
     if (!loading) {
@@ -143,8 +148,58 @@ export default function DashboardLayout({ children }) {
           <span style={{ width: 22, height: 2, background: "#061508", borderRadius: 2, display: "block" }} />
         </button>
         <Link href="/chat" style={{ fontFamily: "serif", fontWeight: 800, fontSize: "1.25rem", color: "#1B5E20", textDecoration: "none" }}>hazela</Link>
-        <div className={`bloub bloub-${(agentState || "neutral").toLowerCase()}`} style={{ width: 32, height: 32, overflow: "hidden", background: "#F0EDE8" }}>
-          <img src={bloubSrc} alt="Bloub" width={32} height={32} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.target.style.display = "none"; e.target.parentNode.style.background = "linear-gradient(135deg,#66BB6A,#1B5E20)"; }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, position: "relative" }}>
+          <button onClick={() => setBellOpen(!bellOpen)} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", padding: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Bell size={20} color="#061508" />
+            {urgentCount > 0 && (
+              <span style={{ position: "absolute", top: 0, right: 0, width: 16, height: 16, borderRadius: "50%", background: "#C62828", color: "white", fontSize: "0.6rem", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>{urgentCount}</span>
+            )}
+          </button>
+          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#66BB6A,#1B5E20)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: "0.8rem", flexShrink: 0 }}>{(user?.name || "U")[0].toUpperCase()}</div>
+          {bellOpen && (
+            <>
+              <div onClick={() => setBellOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 49 }} />
+              <div style={{ position: "absolute", top: 44, right: 0, width: 260, background: "white", border: "1px solid #E5E0D8", borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 50, overflow: "hidden" }}>
+                <div style={{ padding: "10px 14px", borderBottom: "1px solid #F0EDE8", fontWeight: 700, fontSize: "0.8rem", color: "#061508" }}>Notifications</div>
+                <div style={{ maxHeight: 280, overflowY: "auto" }}>
+                  {schemes.length > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: "1px solid #F0EDE8" }}>
+                      <Target size={16} color="#2E7D32" />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#061508" }}>Matching Schemes</div>
+                        <div style={{ fontSize: "0.68rem", color: "#A0A0A0" }}>{schemes.length} found</div>
+                      </div>
+                    </div>
+                  )}
+                  {applications.filter((a) => a.status === "Action Required").length > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: "1px solid #F0EDE8" }}>
+                      <AlertTriangle size={16} color="#C62828" />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#061508" }}>Action Required</div>
+                        <div style={{ fontSize: "0.68rem", color: "#C62828" }}>{applications.filter((a) => a.status === "Action Required").length} pending</div>
+                      </div>
+                    </div>
+                  )}
+                  {documents.filter((d) => d.expiryDate !== "Never" && new Date(d.expiryDate) < new Date(Date.now() + 30 * 86400000)).length > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: "1px solid #F0EDE8" }}>
+                      <FileText size={16} color="#C62828" />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#061508" }}>Document Alert</div>
+                        <div style={{ fontSize: "0.68rem", color: "#C62828" }}>Expiring soon</div>
+                      </div>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px" }}>
+                    <Clock size={16} color="#2E7D32" />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#061508" }}>Deadline</div>
+                      <div style={{ fontSize: "0.68rem", color: "#A0A0A0" }}>PM National Relief Fund</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

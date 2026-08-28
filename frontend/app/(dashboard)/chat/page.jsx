@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useApp } from "../../context/AppContext";
-import { Target, AlertTriangle, FileText, Clock, CheckCircle, Check, Lock, CircleDot, Circle, Paperclip, ArrowUp } from "lucide-react";
+import { Target, AlertTriangle, FileText, Clock, CheckCircle, Check, Lock, CircleDot, Circle, ArrowUp } from "lucide-react";
 
 const C = {
   bg: "#F5F3EF",
@@ -155,8 +155,8 @@ export default function ChatPage() {
       {/* CENTER — Main content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
 
-        {/* ══════ STATUS STRIP — always visible above chat ══════ */}
-        <div style={{ padding: "0.75rem 1.25rem", flexShrink: 0, borderBottom: `1px solid ${C.border}`, background: C.surface }}>
+        {/* ══════ STATUS STRIP — desktop only ══════ */}
+        <div className="hidden md:block" style={{ padding: "0.75rem 1.25rem", flexShrink: 0, borderBottom: `1px solid ${C.border}`, background: C.surface }}>
           {allCards.length > 0 ? (
             <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               {allCards.map((card) => (
@@ -199,18 +199,7 @@ export default function ChatPage() {
           )}
         </div>
 
-        {/* ══════ Active chat header (mobile) ══════ */}
-        {hasMessages && (
-          <div className="flex lg:hidden" style={{ padding: "0.625rem 1rem", borderBottom: `1px solid ${C.border}`, background: C.surface, display: "flex", alignItems: "center", gap: "0.625rem", flexShrink: 0 }}>
-            <div className={`bloub bloub-${(agentState || "neutral").toLowerCase()}`} style={{ width: 32, height: 32, overflow: "hidden", background: C.borderLight, flexShrink: 0 }}>
-              <img src={bloub} alt="Bloub" width={32} height={32} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: "0.8125rem", color: C.green800 }}>Hazela Agent</div>
-              <div style={{ fontSize: "0.68rem", color: C.green400 }}>{stateLabel}</div>
-            </div>
-          </div>
-        )}
+
 
         {/* ══════ Empty-state hero ══════ */}
         {!hasMessages && (
@@ -285,7 +274,7 @@ export default function ChatPage() {
         <div style={{ padding: "0.75rem 1.25rem 0.875rem", borderTop: `1px solid ${C.border}`, background: C.surface, flexShrink: 0 }}>
           <form onSubmit={submit} style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             <div style={{ flex: 1, display: "flex", alignItems: "center", background: C.canvas, border: `1.5px solid ${thinking ? C.green400 : C.border}`, borderRadius: "9999px", padding: "0.5rem 0.75rem 0.5rem 1rem", gap: "0.5rem" }}>
-              <span style={{ color: C.dim, flexShrink: 0, display: "flex", alignItems: "center" }} aria-hidden><Paperclip size={16} /></span>
+
               <input
                 type="text"
                 value={input}
@@ -318,7 +307,7 @@ export default function ChatPage() {
               style={{ width: 44, height: 44, borderRadius: "50%", background: thinking || !input.trim() ? "#E5E0D8" : C.green800, color: thinking || !input.trim() ? "#A0A0A0" : "#fff", border: "none", fontWeight: 700, fontSize: "1.1rem", cursor: thinking || !input.trim() ? "not-allowed" : "pointer", flexShrink: 0 }}
               aria-label="Send message"
             >
-              <ArrowUp size={18} />
+              <ArrowUp size={16} strokeWidth={2.5} />
             </button>
           </form>
         </div>
