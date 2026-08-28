@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useApp } from "../../context/AppContext";
+import { Check, AlertTriangle, CircleDot, Lock, Circle, Folder, X } from "lucide-react";
 
 const C = {
   bg: "#E8F5E9",
@@ -17,11 +18,11 @@ const C = {
 };
 
 const stepStyles = {
-  completed: { color: C.green700, bg: C.green50, border: C.border, icon: "✓" },
-  attention: { color: "#C62828", bg: "#FFEBEE", border: "#FFCDD2", icon: "⚠" },
-  in_progress: { color: "#E08E00", bg: "#FFF8E1", border: "#FFE082", icon: "●" },
-  locked: { color: C.dim, bg: C.green50, border: C.border, icon: "🔒" },
-  pending: { color: C.muted, bg: C.surface, border: C.border, icon: "○" },
+  completed: { color: C.green700, bg: C.green50, border: C.border, Icon: Check },
+  attention: { color: "#C62828", bg: "#FFEBEE", border: "#FFCDD2", Icon: AlertTriangle },
+  in_progress: { color: "#E08E00", bg: "#FFF8E1", border: "#FFE082", Icon: CircleDot },
+  locked: { color: C.dim, bg: C.green50, border: C.border, Icon: Lock },
+  pending: { color: C.muted, bg: C.surface, border: C.border, Icon: Circle },
 };
 
 export default function ApplicationsPage() {
@@ -93,7 +94,7 @@ export default function ApplicationsPage() {
 
         {applications.length === 0 ? (
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "1rem", padding: "3rem", textAlign: "center" }}>
-            <span style={{ fontSize: "2.5rem" }}>📁</span>
+            <span style={{ display: "flex", justifyContent: "center" }}><Folder size={40} color="#81C784" /></span>
             <h3 style={{ fontWeight: 700, color: C.green800, marginTop: 12 }}>No applications yet</h3>
             <p style={{ fontSize: "0.875rem", color: C.muted, marginTop: 6 }}>Explore matching schemes and delegate preparation to your agent.</p>
             <Link href="/explore" style={{ display: "inline-block", marginTop: 20, padding: "0.625rem 1.25rem", background: C.green800, color: "#fff", borderRadius: 9999, fontWeight: 700, fontSize: "0.875rem", textDecoration: "none" }}>
@@ -149,7 +150,7 @@ export default function ApplicationsPage() {
                         return (
                           <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, fontSize: "0.78rem" }}>
                             <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <span style={{ width: 22, height: 22, borderRadius: "50%", border: `1px solid ${style.border}`, background: style.bg, color: style.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 700 }}>{style.icon}</span>
+                              <span style={{ width: 22, height: 22, borderRadius: "50%", border: `1px solid ${style.border}`, background: style.bg, color: style.color, display: "flex", alignItems: "center", justifyContent: "center" }}>{React.createElement(style.Icon, { size: 12 })}</span>
                               <span style={{ color: state === "completed" ? C.dim : C.text, textDecoration: state === "completed" ? "line-through" : "none" }}>{label}</span>
                             </span>
                           </div>
@@ -167,7 +168,7 @@ export default function ApplicationsPage() {
       {otpModalApp && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(10,39,13,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "1rem", padding: "1.5rem", maxWidth: 400, width: "100%" }}>
-            <button type="button" onClick={() => setOtpModalApp(null)} style={{ float: "right", background: "none", border: "none", cursor: "pointer", color: C.dim }}>✕</button>
+            <button type="button" onClick={() => setOtpModalApp(null)} style={{ float: "right", background: "none", border: "none", cursor: "pointer", color: C.dim, display: "flex", alignItems: "center" }}><X size={18} /></button>
             <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#C62828", textTransform: "uppercase" }}>Identity verification</span>
             <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: C.text, marginTop: 4 }}>OTP consent required</h3>
             <p style={{ fontSize: "0.82rem", color: C.muted, marginTop: 8, lineHeight: 1.5 }}>

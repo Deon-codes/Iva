@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useApp } from "../../context/AppContext";
+import { FileText, AlertTriangle, Check, Folder, Lightbulb } from "lucide-react";
 
 export default function DocumentsPage() {
   const { documents, uploadDocument } = useApp();
@@ -54,7 +55,7 @@ export default function DocumentsPage() {
         <div className="lg:col-span-2 space-y-4">
           {documents.length === 0 ? (
             <div className="bg-white border border-[#C8E6C9] rounded-2xl p-8 text-center">
-              <div className="text-4xl mb-3">📄</div>
+              <div className="mb-3" style={{ display: "flex", justifyContent: "center" }}><FileText size={40} color="#81C784" /></div>
               <p
                 className="text-[#2E7D32] font-semibold mb-1"
                 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
@@ -110,7 +111,7 @@ export default function DocumentsPage() {
                       className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700 font-semibold mb-3"
                       style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                     >
-                      ⚠️ {doc.alert}
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} /> {doc.alert}</span>
                     </div>
                   )}
 
@@ -120,7 +121,7 @@ export default function DocumentsPage() {
                       className="text-xs text-[#2E7D32] mb-3 font-medium"
                       style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                     >
-                      ✓ {doc.alert}
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Check size={14} color="#2E7D32" /> {doc.alert}</span>
                     </p>
                   )}
 
@@ -191,7 +192,7 @@ export default function DocumentsPage() {
                             className="text-xs bg-[#E8F5E9] border border-[#C8E6C9] rounded-lg px-2.5 py-1 text-[#2E7D32] font-semibold"
                             style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                           >
-                            📁 {app}
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Folder size={12} /> {app}</span>
                           </span>
                         ))
                       )}
@@ -258,7 +259,7 @@ export default function DocumentsPage() {
             </div>
 
             <div className="bg-[#E8F5E9] border border-[#C8E6C9] p-3 rounded-xl text-[11px] text-[#2E7D32] leading-relaxed">
-              💡 Document parsing uses AI OCR scan to extract issue identifiers and digital signatures automatically.
+              <span style={{ display: "flex", alignItems: "flex-start", gap: 6 }}><Lightbulb size={14} style={{ marginTop: 1, flexShrink: 0 }} /> Document parsing uses AI OCR scan to extract issue identifiers and digital signatures automatically.</span>
             </div>
 
             <button

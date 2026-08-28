@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useApp } from "../../context/AppContext";
+import { Target, AlertTriangle, FileText, Clock, CheckCircle, Check, Lock, CircleDot, Circle, Paperclip, ArrowUp } from "lucide-react";
 
 const C = {
   bg: "#F5F3EF",
@@ -115,18 +116,18 @@ export default function ChatPage() {
   // Build status cards from real data
   const allCards = [
     ...(schemes.length
-      ? [{ id: "wc-schemes", icon: "🎯", title: "Matching Schemes", detail: "Agent scanned your profile", count: schemes.length, countColor: C.green800, bgColor: C.green50, href: "/explore" }]
+      ? [{ id: "wc-schemes", icon: <Target size={16} />, title: "Matching Schemes", detail: "Agent scanned your profile", count: schemes.length, countColor: C.green800, bgColor: C.green50, href: "/explore" }]
       : []),
     ...applications.filter((a) => a.status === "Action Required").map((a) => ({
-      id: `wc-app-${a.id}`, icon: "⚠️", title: "Action Required", detail: a.name, count: "!", countColor: "#C62828", bgColor: "#FFEBEE", href: "/applications",
+      id: `wc-app-${a.id}`, icon: <AlertTriangle size={16} />, title: "Action Required", detail: a.name, count: "!", countColor: "#C62828", bgColor: "#FFEBEE", href: "/applications",
     })),
     ...documents
       .map((d) => ({ ...d, daysLeft: daysUntilExpiry(d.expiryDate) }))
       .filter((d) => d.daysLeft < 30)
       .map((d) => ({
-        id: `wc-doc-${d.id}`, icon: "📄", title: "Document Alert", detail: d.type, count: d.daysLeft, countColor: "#C62828", bgColor: "#FFEBEE", href: "/documents",
+        id: `wc-doc-${d.id}`, icon: <FileText size={16} />, title: "Document Alert", detail: d.type, count: d.daysLeft, countColor: "#C62828", bgColor: "#FFEBEE", href: "/documents",
       })),
-    { id: "wc-deadline", icon: "⏰", title: "Deadline", detail: "PM National Relief Fund", count: "5d", countColor: C.green700, bgColor: C.green50, href: "/explore" },
+    { id: "wc-deadline", icon: <Clock size={16} />, title: "Deadline", detail: "PM National Relief Fund", count: "5d", countColor: C.green700, bgColor: C.green50, href: "/explore" },
   ].slice(0, 4);
 
   const pendingCount = applications.filter((a) =>
@@ -176,7 +177,7 @@ export default function ChatPage() {
                       overflow: "hidden",
                     }}
                   >
-                    <span style={{ fontSize: "0.95rem", lineHeight: 1 }}>{card.icon}</span>
+                    <span style={{ lineHeight: 1, display: "flex", alignItems: "center" }}>{card.icon}</span>
                     <span style={{ fontSize: "0.75rem", fontWeight: 600, color: C.text, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{card.title}</span>
                     <span style={{ fontSize: "0.72rem", fontWeight: 800, color: card.countColor, background: card.bgColor, borderRadius: "9999px", padding: "1px 7px", lineHeight: 1.4, flexShrink: 0 }}>{card.count}</span>
                     {/* Hover detail — hidden by default, revealed on hover */}
@@ -189,7 +190,7 @@ export default function ChatPage() {
             </div>
           ) : (
             <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", padding: "0.25rem 0" }}>
-              <span style={{ fontSize: "1rem", lineHeight: 1 }}>✓</span>
+              <span style={{ lineHeight: 1, display: "flex", alignItems: "center" }}><CheckCircle size={18} color="#2E7D32" /></span>
               <div>
                 <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: C.text }}>You&apos;re all caught up</span>
                 <span style={{ fontSize: "0.72rem", color: C.dim, marginLeft: "0.5rem" }}>No actions need your attention right now</span>
@@ -270,7 +271,7 @@ export default function ChatPage() {
                 </div>
                 {steps.map((step, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "0.2rem 0", fontSize: "0.75rem", opacity: step.locked ? 0.5 : 1 }} className={step.active ? "step-item" : ""}>
-                    <span>{step.locked ? "🔒" : step.done ? "✓" : step.active ? "●" : "○"}</span>
+                    <span style={{ display: "inline-flex", alignItems: "center" }}>{step.locked ? <Lock size={14} /> : step.done ? <Check size={14} /> : step.active ? <CircleDot size={14} /> : <Circle size={14} />}</span>
                     <span style={{ color: step.done ? C.dim : step.active ? C.text : C.muted, fontWeight: step.active ? 700 : 400, textDecoration: step.done ? "line-through" : "none" }}>{step.text}</span>
                   </div>
                 ))}
@@ -284,7 +285,7 @@ export default function ChatPage() {
         <div style={{ padding: "0.75rem 1.25rem 0.875rem", borderTop: `1px solid ${C.border}`, background: C.surface, flexShrink: 0 }}>
           <form onSubmit={submit} style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             <div style={{ flex: 1, display: "flex", alignItems: "center", background: C.canvas, border: `1.5px solid ${thinking ? C.green400 : C.border}`, borderRadius: "9999px", padding: "0.5rem 0.75rem 0.5rem 1rem", gap: "0.5rem" }}>
-              <span style={{ color: C.dim, fontSize: "0.85rem", flexShrink: 0 }} aria-hidden>📎</span>
+              <span style={{ color: C.dim, flexShrink: 0, display: "flex", alignItems: "center" }} aria-hidden><Paperclip size={16} /></span>
               <input
                 type="text"
                 value={input}
@@ -317,7 +318,7 @@ export default function ChatPage() {
               style={{ width: 44, height: 44, borderRadius: "50%", background: thinking || !input.trim() ? "#E5E0D8" : C.green800, color: thinking || !input.trim() ? "#A0A0A0" : "#fff", border: "none", fontWeight: 700, fontSize: "1.1rem", cursor: thinking || !input.trim() ? "not-allowed" : "pointer", flexShrink: 0 }}
               aria-label="Send message"
             >
-              ↑
+              <ArrowUp size={18} />
             </button>
           </form>
         </div>

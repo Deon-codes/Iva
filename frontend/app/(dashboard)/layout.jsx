@@ -4,12 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useApp } from "../context/AppContext";
 import { useRouter, usePathname } from "next/navigation";
+import { MessageCircle, Search, ClipboardList, FileText, X } from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/chat",         label: "Chat",         icon: "💬", desc: "Agent workspace" },
-  { href: "/explore",      label: "Explore",      icon: "🔍", desc: "Browse schemes" },
-  { href: "/applications", label: "Applications", icon: "📋", desc: "Track progress" },
-  { href: "/documents",    label: "Documents",    icon: "📄", desc: "Manage docs" },
+  { href: "/chat",         label: "Chat",         icon: <MessageCircle size={18} />, desc: "Agent workspace" },
+  { href: "/explore",      label: "Explore",      icon: <Search size={18} />, desc: "Browse schemes" },
+  { href: "/applications", label: "Applications", icon: <ClipboardList size={18} />, desc: "Track progress" },
+  { href: "/documents",    label: "Documents",    icon: <FileText size={18} />, desc: "Manage docs" },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -52,7 +53,7 @@ export default function DashboardLayout({ children }) {
             hazela
           </Link>
           {onClose && (
-            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "#81C784", lineHeight: 1 }}>✕</button>
+            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#81C784", lineHeight: 1 }}><X size={18} /></button>
           )}
         </div>
         <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A5D6A7" }}>Agent Workspace</span>

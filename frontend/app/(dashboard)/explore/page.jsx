@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useApp } from "../../context/AppContext";
+import { X } from "lucide-react";
 
 const C = {
   bg: "#E8F5E9",
@@ -414,7 +415,7 @@ export default function ExplorePage() {
               onClick={() => setSelectedScheme(null)}
               style={{ float: "right", background: "none", border: "none", fontSize: "1.25rem", cursor: "pointer", color: C.dim }}
             >
-              ✕
+              <X size={18} />
             </button>
             <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: C.dim }}>{selectedScheme.department}</span>
             <h2 style={{ fontSize: "1.35rem", fontWeight: 700, color: C.text, marginTop: 4, marginBottom: 16 }}>{selectedScheme.name}</h2>
