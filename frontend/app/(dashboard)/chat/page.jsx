@@ -4,17 +4,18 @@ import Link from "next/link";
 import { useApp } from "../../context/AppContext";
 
 const C = {
-  bg: "#E8F5E9",
+  bg: "#F5F3EF",
   surface: "#FFFFFF",
-  border: "#C8E6C9",
+  canvas: "#FAF8F5",
+  border: "#E5E0D8",
+  borderLight: "#F0EDE8",
+  muted: "#6B7280",
+  dim: "#A0A0A0",
+  text: "#061508",
   green50: "#E8F5E9",
-  green100: "#C8E6C9",
   green400: "#66BB6A",
   green700: "#2E7D32",
   green800: "#1B5E20",
-  text: "#0A270D",
-  muted: "#2E7D32",
-  dim: "#81C784",
 };
 
 const bloubFile = (state) =>
@@ -111,20 +112,21 @@ export default function ChatPage() {
     setInput("");
   }
 
-  const workCards = [
+  // Build status cards from real data
+  const allCards = [
     ...(schemes.length
-      ? [{ id: "wc-schemes", icon: "🎯", title: "Matching Schemes", label: `${schemes.length} opportunities found`, sub: "Agent scanned your profile", href: "/explore", badge: schemes.length, accent: C.green400 }]
+      ? [{ id: "wc-schemes", icon: "🎯", title: "Matching Schemes", detail: "Agent scanned your profile", count: schemes.length, countColor: C.green800, bgColor: C.green50, href: "/explore" }]
       : []),
     ...applications.filter((a) => a.status === "Action Required").map((a) => ({
-      id: `wc-app-${a.id}`, icon: "⚠️", title: "Action Required", label: a.name, sub: "Income mismatch flagged", href: "/applications", badge: "!", accent: "#E08E00",
+      id: `wc-app-${a.id}`, icon: "⚠️", title: "Action Required", detail: a.name, count: "!", countColor: "#C62828", bgColor: "#FFEBEE", href: "/applications",
     })),
     ...documents
       .map((d) => ({ ...d, daysLeft: daysUntilExpiry(d.expiryDate) }))
       .filter((d) => d.daysLeft < 30)
       .map((d) => ({
-        id: `wc-doc-${d.id}`, icon: "📄", title: "Document Alert", label: d.type, sub: `Expires in ${d.daysLeft} days`, href: "/documents", badge: d.daysLeft, accent: "#C62828",
+        id: `wc-doc-${d.id}`, icon: "📄", title: "Document Alert", detail: d.type, count: d.daysLeft, countColor: "#C62828", bgColor: "#FFEBEE", href: "/documents",
       })),
-    { id: "wc-deadline", icon: "⏰", title: "Deadline", label: "PM National Relief Fund", sub: "Closing in 5 days", href: "/explore", badge: "5d", accent: C.green700 },
+    { id: "wc-deadline", icon: "⏰", title: "Deadline", detail: "PM National Relief Fund", count: "5d", countColor: C.green700, bgColor: C.green50, href: "/explore" },
   ].slice(0, 4);
 
   const pendingCount = applications.filter((a) =>
@@ -149,38 +151,79 @@ export default function ChatPage() {
   return (
     <div style={{ display: "flex", height: "100%", overflow: "hidden", background: C.bg, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-      {/* CENTER — Agent workspace */}
+      {/* CENTER — Main content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
 
-        {/* Mobile section nav */}
-        <div className="flex lg:hidden" style={{ borderBottom: `1px solid ${C.border}`, background: C.surface, padding: "0.625rem 1rem", gap: "0.5rem", overflowX: "auto", flexShrink: 0 }}>
-          {[
-            { href: "/chat", icon: "💬", label: "Chat", count: null, active: true },
-            { href: "/explore", icon: "🔍", label: "Explore", count: schemes.length },
-            { href: "/applications", icon: "📋", label: "Applications", count: pendingCount || null },
-          ].map(({ href, icon, label, count, active }) => (
-            <Link key={href} href={href} style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.875rem", borderRadius: "9999px", background: active ? C.green800 : C.green50, color: active ? "#fff" : C.green700, fontSize: "0.8rem", fontWeight: 600, textDecoration: "none", border: `1px solid ${active ? C.green800 : C.border}`, whiteSpace: "nowrap" }}>
-              {icon} {label}
-              {count != null && count > 0 && (
-                <span style={{ background: active ? C.green400 : C.green800, color: "white", borderRadius: "9999px", fontSize: "0.65rem", fontWeight: 800, padding: "0 5px", minWidth: 18, textAlign: "center" }}>{count}</span>
-              )}
-            </Link>
-          ))}
+        {/* ══════ STATUS STRIP — always visible above chat ══════ */}
+        <div style={{ padding: "0.75rem 1.25rem", flexShrink: 0, borderBottom: `1px solid ${C.border}`, background: C.surface }}>
+          {allCards.length > 0 ? (
+            <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+              {allCards.map((card) => (
+                <Link key={card.id} href={card.href} style={{ textDecoration: "none", flex: "1 1 0", minWidth: 140 }}>
+                  <div
+                    className="status-card"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.625rem",
+                      background: C.canvas,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: "0.625rem",
+                      padding: "0.5rem 0.75rem",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                      position: "relative",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.95rem", lineHeight: 1 }}>{card.icon}</span>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 600, color: C.text, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{card.title}</span>
+                    <span style={{ fontSize: "0.72rem", fontWeight: 800, color: card.countColor, background: card.bgColor, borderRadius: "9999px", padding: "1px 7px", lineHeight: 1.4, flexShrink: 0 }}>{card.count}</span>
+                    {/* Hover detail — hidden by default, revealed on hover */}
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: C.surface, borderTop: `1px solid ${C.border}`, padding: "0.3rem 0.75rem", fontSize: "0.68rem", color: C.muted, maxHeight: 0, overflow: "hidden", opacity: 0, transition: "all 0.2s" }} className="status-detail">
+                      {card.detail}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", padding: "0.25rem 0" }}>
+              <span style={{ fontSize: "1rem", lineHeight: 1 }}>✓</span>
+              <div>
+                <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: C.text }}>You&apos;re all caught up</span>
+                <span style={{ fontSize: "0.72rem", color: C.dim, marginLeft: "0.5rem" }}>No actions need your attention right now</span>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Empty-state hero (desktop reference) */}
+        {/* ══════ Active chat header (mobile) ══════ */}
+        {hasMessages && (
+          <div className="flex lg:hidden" style={{ padding: "0.625rem 1rem", borderBottom: `1px solid ${C.border}`, background: C.surface, display: "flex", alignItems: "center", gap: "0.625rem", flexShrink: 0 }}>
+            <div className={`bloub bloub-${(agentState || "neutral").toLowerCase()}`} style={{ width: 32, height: 32, overflow: "hidden", background: C.borderLight, flexShrink: 0 }}>
+              <img src={bloub} alt="Bloub" width={32} height={32} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "0.8125rem", color: C.green800 }}>Hazela Agent</div>
+              <div style={{ fontSize: "0.68rem", color: C.green400 }}>{stateLabel}</div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════ Empty-state hero ══════ */}
         {!hasMessages && (
-          <div style={{ padding: "2.5rem 1.5rem 1rem", textAlign: "center", flexShrink: 0 }}>
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
+          <div style={{ padding: "2rem 1.5rem 1rem", textAlign: "center", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
               <div
                 className={`bloub bloub-${(agentState || "neutral").toLowerCase()}`}
-                style={{ width: 120, height: 120, overflow: "hidden", background: C.green100, boxShadow: "0 8px 32px rgba(27,94,32,0.15)" }}
+                style={{ width: 110, height: 110, overflow: "hidden", background: C.borderLight, boxShadow: "0 8px 32px rgba(6,21,8,0.08)" }}
               >
                 <img
                   src={bloub}
                   alt={`Bloub ${agentState}`}
-                  width={120}
-                  height={120}
+                  width={110}
+                  height={110}
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   onError={(e) => {
                     e.target.style.display = "none";
@@ -196,20 +239,7 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* Active chat header (mobile reference) */}
-        {hasMessages && (
-          <div className="flex lg:hidden" style={{ padding: "0.75rem 1rem", borderBottom: `1px solid ${C.border}`, background: C.surface, display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
-            <div className={`bloub bloub-${(agentState || "neutral").toLowerCase()}`} style={{ width: 36, height: 36, overflow: "hidden", background: C.green100, flexShrink: 0 }}>
-              <img src={bloub} alt="Bloub" width={36} height={36} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: "0.9rem", color: C.green800 }}>Hazela Agent</div>
-              <div style={{ fontSize: "0.72rem", color: C.green400 }}>{stateLabel}</div>
-            </div>
-          </div>
-        )}
-
-        {/* Messages */}
+        {/* ══════ Messages ══════ */}
         <div style={{ flex: 1, overflowY: "auto", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.875rem" }}>
           {chatHistory.map((msg) => (
             <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: msg.sender === "user" ? "flex-end" : "flex-start" }} className="slide-up">
@@ -250,30 +280,10 @@ export default function ChatPage() {
           <div ref={msgEnd} />
         </div>
 
-        {/* Contextual work cards row (empty state — desktop reference) */}
-        {!hasMessages && workCards.length > 0 && (
-          <div style={{ padding: "0 1.25rem 1rem", flexShrink: 0 }}>
-            <div className="hidden md:grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "0.75rem" }}>
-              {workCards.map((card, i) => (
-                <Link key={card.id} href={card.href} style={{ textDecoration: "none" }}>
-                  <div className="work-card" style={{ minHeight: 130, borderLeft: `4px solid ${card.accent}`, marginTop: i > 0 ? -8 : 0, position: "relative", zIndex: 10 + i }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                      <span style={{ fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", color: C.green800 }}>{card.title}</span>
-                      <span style={{ background: C.green800, color: "#fff", borderRadius: 9999, fontSize: "0.65rem", fontWeight: 800, padding: "2px 7px" }}>{card.badge}</span>
-                    </div>
-                    <div style={{ fontSize: "0.78rem", fontWeight: 700, color: C.text, lineHeight: 1.4 }}>{card.label}</div>
-                    <div style={{ fontSize: "0.68rem", color: C.muted, marginTop: 6 }}>{card.sub}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Input bar */}
-        <div style={{ padding: "0.875rem 1.25rem 1rem", borderTop: `1px solid ${C.border}`, background: C.surface, flexShrink: 0 }}>
+        {/* ══════ Input bar ══════ */}
+        <div style={{ padding: "0.75rem 1.25rem 0.875rem", borderTop: `1px solid ${C.border}`, background: C.surface, flexShrink: 0 }}>
           <form onSubmit={submit} style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <div style={{ flex: 1, display: "flex", alignItems: "center", background: C.green50, border: `1.5px solid ${thinking ? C.green400 : C.border}`, borderRadius: "9999px", padding: "0.5rem 0.75rem 0.5rem 1rem", gap: "0.5rem" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", background: C.canvas, border: `1.5px solid ${thinking ? C.green400 : C.border}`, borderRadius: "9999px", padding: "0.5rem 0.75rem 0.5rem 1rem", gap: "0.5rem" }}>
               <span style={{ color: C.dim, fontSize: "0.85rem", flexShrink: 0 }} aria-hidden>📎</span>
               <input
                 type="text"
@@ -295,7 +305,8 @@ export default function ChatPage() {
               <button
                 type="button"
                 onClick={() => fire("Deep research on scholarships matching my profile")}
-                style={{ background: C.green800, border: "none", cursor: "pointer", fontSize: "0.72rem", color: "#fff", fontWeight: 700, whiteSpace: "nowrap", fontFamily: "inherit", padding: "0.4rem 0.75rem", borderRadius: 9999, flexShrink: 0 }}
+                disabled={thinking}
+                style={{ background: C.green800, border: "none", cursor: thinking ? "not-allowed" : "pointer", fontSize: "0.72rem", color: "#fff", fontWeight: 700, whiteSpace: "nowrap", fontFamily: "inherit", padding: "0.4rem 0.75rem", borderRadius: 9999, flexShrink: 0, opacity: thinking ? 0.5 : 1 }}
               >
                 Deeper Research
               </button>
@@ -303,7 +314,7 @@ export default function ChatPage() {
             <button
               type="submit"
               disabled={thinking || !input.trim()}
-              style={{ width: 44, height: 44, borderRadius: "50%", background: thinking || !input.trim() ? C.green100 : C.green800, color: thinking || !input.trim() ? C.dim : "#fff", border: "none", fontWeight: 700, fontSize: "1.1rem", cursor: thinking || !input.trim() ? "not-allowed" : "pointer", flexShrink: 0 }}
+              style={{ width: 44, height: 44, borderRadius: "50%", background: thinking || !input.trim() ? "#E5E0D8" : C.green800, color: thinking || !input.trim() ? "#A0A0A0" : "#fff", border: "none", fontWeight: 700, fontSize: "1.1rem", cursor: thinking || !input.trim() ? "not-allowed" : "pointer", flexShrink: 0 }}
               aria-label="Send message"
             >
               ↑
@@ -312,51 +323,29 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* RIGHT — Work cards & trending (desktop) */}
-      <div className="hidden xl:flex" style={{ width: 300, flexShrink: 0, flexDirection: "column", borderLeft: `1px solid ${C.border}`, background: C.surface, padding: "1.25rem 1rem", gap: "1rem", overflowY: "auto" }}>
-        <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.dim }}>Agent Work Cards</div>
-
-        {workCards.map((card, i) => (
-          <Link key={card.id} href={card.href} style={{ textDecoration: "none" }}>
-            <div className="work-card" style={{ marginTop: i > 0 ? "-0.5rem" : 0, zIndex: 10 + i, position: "relative", borderLeft: `4px solid ${card.accent}` }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.375rem" }}>
-                <span style={{ fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", color: C.green800 }}>{card.title}</span>
-                <span style={{ background: C.green800, color: "#fff", borderRadius: 9999, fontSize: "0.65rem", fontWeight: 800, padding: "2px 7px" }}>{card.badge}</span>
-              </div>
-              <div style={{ fontSize: "0.8125rem", fontWeight: 700, color: C.text }}>{card.label}</div>
-              <div style={{ fontSize: "0.72rem", color: C.muted, marginTop: 4 }}>{card.sub}</div>
-              <div style={{ fontSize: "0.68rem", color: card.accent, fontWeight: 700, marginTop: "0.375rem" }}>View →</div>
-            </div>
-          </Link>
-        ))}
-
-        <div style={{ marginTop: "0.5rem" }}>
-          <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.dim, marginBottom: "0.5rem" }}>Trending for you</div>
-          {schemes.slice(0, 3).map((scheme) => (
-            <div key={scheme.id} style={{ padding: "0.625rem 0", borderBottom: `1px solid ${C.border}` }}>
-              <div style={{ fontSize: "0.78rem", fontWeight: 700, color: C.text, lineHeight: 1.4 }}>{scheme.name}</div>
-              <div style={{ fontSize: "0.68rem", color: C.muted, marginTop: 2 }}>{scheme.department}</div>
-            </div>
-          ))}
+      {/* ══════ RIGHT — Trending sidebar (desktop) ══════ */}
+      <div className="hidden xl:flex" style={{ width: 300, flexShrink: 0, flexDirection: "column", borderLeft: `1px solid ${C.border}`, background: C.surface }}>
+        <div style={{ padding: "1rem 1rem 0.75rem", borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.dim }}>Trending for you</div>
         </div>
-
-        <div>
-          <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.dim, marginBottom: "0.5rem" }}>Quick Actions</div>
-          {[
-            { label: "Find scholarships I qualify for", prompt: "Find scholarships matching my profile" },
-            { label: "Why was my application flagged?", prompt: "Why was my Central Sector application flagged?" },
-            { label: "Fix certificate mismatch", prompt: "Fix my profile income certificate mismatch" },
-          ].map(({ label, prompt }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => fire(prompt)}
-              disabled={thinking}
-              style={{ width: "100%", textAlign: "left", padding: "0.6rem 0.875rem", marginBottom: "0.375rem", background: C.green50, border: `1px solid ${C.border}`, borderRadius: "0.75rem", fontSize: "0.8rem", fontWeight: 600, color: C.green800, cursor: thinking ? "not-allowed" : "pointer", fontFamily: "inherit" }}
-            >
-              {label} →
-            </button>
-          ))}
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 1rem" }}>
+          {schemes.length > 0 ? (
+            schemes.map((scheme) => (
+              <div key={scheme.id} style={{ padding: "0.75rem 0", borderBottom: `1px solid ${C.borderLight}`, cursor: "pointer", transition: "background 0.15s" }} className="trending-item">
+                <div style={{ fontSize: "0.8125rem", fontWeight: 600, color: C.text, lineHeight: 1.4 }}>{scheme.name}</div>
+                <div style={{ fontSize: "0.68rem", color: C.dim, marginTop: 3 }}>{scheme.department}</div>
+                {scheme.deadline && (
+                  <div style={{ fontSize: "0.65rem", color: C.green700, marginTop: 3, fontWeight: 600 }}>
+                    Deadline: {new Date(scheme.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div style={{ padding: "1rem 0", textAlign: "center", color: C.dim, fontSize: "0.8125rem" }}>
+              No trending schemes right now
+            </div>
+          )}
         </div>
       </div>
     </div>

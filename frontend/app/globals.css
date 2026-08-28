@@ -97,19 +97,19 @@
 .work-card {
   position: relative;
   background: #FFFFFF;
-  border: 1px solid #C8E6C9;
+  border: 1px solid #E5E0D8;
   border-radius: 1rem;
   padding: 1rem 1.1rem;
-  box-shadow: 0 2px 8px rgba(27,94,32,0.06);
+  box-shadow: 0 2px 8px rgba(6,21,8,0.04);
   transition: box-shadow 0.2s, transform 0.2s;
 }
-.work-card:hover { box-shadow: 0 6px 20px rgba(27,94,32,0.13); transform: translateY(-2px); }
+.work-card:hover { box-shadow: 0 6px 20px rgba(6,21,8,0.1); transform: translateY(-2px); }
 .work-card::before {
   content: '';
   position: absolute;
   top: -4px; left: 8px; right: 8px;
   height: 100%;
-  background: rgba(200,230,201,0.5);
+  background: rgba(229,224,216,0.4);
   border-radius: 1rem;
   z-index: -1;
 }
@@ -118,7 +118,7 @@
   position: absolute;
   top: -8px; left: 16px; right: 16px;
   height: 100%;
-  background: rgba(165,214,167,0.25);
+  background: rgba(229,224,216,0.2);
   border-radius: 1rem;
   z-index: -2;
 }
@@ -132,27 +132,27 @@
   border-radius: 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #2E7D32;
+  color: #4A5568;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
   text-decoration: none;
 }
-.sidebar-item:hover  { background: #C8E6C9; color: #1B5E20; }
-.sidebar-item.active { background: #A5D6A7; color: #1B5E20; font-weight: 700; }
+.sidebar-item:hover  { background: #F0EDE8; color: #061508; }
+.sidebar-item.active { background: #E8F5E9; color: #1B5E20; font-weight: 700; }
 
 /* ─── Scheme cards ───────────────────────────────────────────────────────── */
 .scheme-card {
   background: #FFFFFF;
-  border: 1px solid #C8E6C9;
+  border: 1px solid #E5E0D8;
   border-radius: 1rem;
   padding: 1.25rem;
   transition: box-shadow 0.2s, border-color 0.2s;
 }
-.scheme-card:hover { border-color: #66BB6A; box-shadow: 0 4px 16px rgba(27,94,32,0.1); }
+.scheme-card:hover { border-color: #A5D6A7; box-shadow: 0 4px 16px rgba(6,21,8,0.08); }
 
 /* ─── Chat bubbles ───────────────────────────────────────────────────────── */
-.msg-agent { background: #FFFFFF; border: 1px solid #C8E6C9; border-radius: 1rem 1rem 1rem 0; }
-.msg-user  { background: #1B5E20; color: white; border-radius: 1rem 1rem 0 1rem; }
+.msg-agent { background: #FFFFFF; border: 1px solid #E5E0D8; border-radius: 1rem 1rem 1rem 0; }
+.msg-user  { background: #F0EDE8; color: #061508; border-radius: 1rem 1rem 0 1rem; }
 
 /* ─── Animations ─────────────────────────────────────────────────────────── */
 @keyframes slide-up {
@@ -169,6 +169,24 @@
 
 /* ─── Marquee (GSAP-driven, see SchemeSourceMarquee.jsx) ─────────────────── */
 .marquee-wrapper { overflow: hidden; }
+
+/* ─── Status card hover reveal ───────────────────────────────────────────── */
+.status-card:hover .status-detail {
+  max-height: 28px;
+  opacity: 1;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.status-card:hover {
+  border-color: #A5D6A7;
+  box-shadow: 0 2px 8px rgba(6,21,8,0.06);
+  transform: translateY(-1px);
+}
+
+/* ─── Trending item hover ────────────────────────────────────────────────── */
+.trending-item:hover {
+  background: #F5F3EF;
+}
 
 /* ─── Ping dot ────────────────────────────────────────────────────────────── */
 @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
