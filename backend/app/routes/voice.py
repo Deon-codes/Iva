@@ -4,9 +4,7 @@ from pydantic import BaseModel
 from app.services.voice_service import voice_service, detect_language
 
 router = APIRouter(prefix="/api/voice", tags=["voice"])
-logger = logging.getLogger(__name__)
-
-
+logger = logging.getLogger("voice")
 # Pydantic models for explicit mock JSON testing
 class MockVoiceRequest(BaseModel):
     call_sid: str = "mock_call_sid_123"
@@ -32,26 +30,66 @@ async def voice_incoming(
     Twilio Incoming Call Webhook.
     Starts the telephony session and issues the greeting.
     """
+
+    logger.info("VOICE_INCOMING received call_sid=%s", CallSid)
+
     try:
-        session = await voice_service.get_or_create_session(CallSid, From)
-        
-        # Select initial message
+        session = await voice_service.get_or_create_session(
+            CallSid,
+            From
+        )
+
+        logger.info(
+            "VOICE_INCOMING session_created call_sid=%s mock=%s",
+            CallSid,
+            session["is_mock"],
+        )
+
         if session["is_mock"]:
-            msg = "[MOCK SIMULATION] Welcome to the Hazela Mock Voice System. This is a testing simulation and NOT a real government service. Aap sarkari yojana aur scholarship ke baare mein kya jaana chahte hain?"
+            msg = (
+                "[MOCK SIMULATION] Welcome to the Hazela Mock Voice System. "
+                "This is a testing simulation and NOT a real government service. "
+                "Aap sarkari yojana aur scholarship ke baare mein kya jaana chahte hain?"
+            )
         else:
-            msg = "Namaste. Main aapki sarkari yojana aur scholarship application mein madad karne ke liye hoon. Aap kya jaana chahte hain?"
-            
-        xml_content = voice_service.generate_twiML(msg, session["language"])
-        return Response(content=xml_content, media_type="application/xml")
+            msg = (
+                "Namaste. Main aapki sarkari yojana aur scholarship "
+                "application mein madad karne ke liye hoon. "
+                "Aap kya jaana chahte hain?"
+            )
+
+        xml_content = voice_service.generate_twiML(
+            msg,
+            session["language"]
+        )
+
+        logger.info(
+            "VOICE_INCOMING returning_twiml call_sid=%s",
+            CallSid,
+        )
+
+        return Response(
+            content=xml_content,
+            media_type="application/xml"
+        )
+
     except Exception as exc:
-        logger.error("Error in voice_incoming webhook: %s", exc, exc_info=True)
-        # Always return a polite error XML on failure rather than crashing or faking
+        logger.error(
+            "Error in voice_incoming webhook: %s",
+            exc,
+            exc_info=True
+        )
+
         error_xml = voice_service.generate_error_twiML(
-            "Humare servers par takneeki samasya hai. Kripya baad mein dobara call karein.",
+            "Humare servers par takneeki samasya hai. "
+            "Kripya baad mein dobara call karein.",
             "hi"
         )
-        return Response(content=error_xml, media_type="application/xml")
 
+        return Response(
+            content=error_xml,
+            media_type="application/xml"
+        )
 
 @router.post("/respond", response_class=Response)
 async def voice_respond(
