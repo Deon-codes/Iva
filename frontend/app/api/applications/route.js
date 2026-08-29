@@ -1,59 +1,71 @@
 import { NextResponse } from "next/server";
-import { mockApplications, addApplication, updateApplication } from "../mockDb";
+import { backendRequest, transformApplication } from "../lib/client";
 
+/**
+ * GET /api/applications?id=xxx&user_id=xxx
+ * Proxies to backend GET /api/applications?user_id=xxx or GET /api/applications/{id}
+ */
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  
-  if (id) {
-    const app = mockApplications.find(a => a.id === id);
-    if (!app) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+  const userId = searchParams.get("user_id") || "demo-user";
+
+  try {
+    if (id) {
+      // Fetch a specific application
+      const result = await backendRequest(`/api/applications/${encodeURIComponent(id)}`);
+      if (result.error) {
+        return NextResponse.json({ error: result.error }, { status: result.status });
+      }
+      return NextResponse.json(transformApplication(result.data));
     }
-    return NextResponse.json(app);
+
+    // Fetch all applications for user
+    const result = await backendRequest(
+      `/api/applications?user_id=${encodeURIComponent(userId)}`
+    );
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
+
+    const apps = Array.isArray(result.data)
+      ? result.data.map(transformApplication)
+      : [];
+    return NextResponse.json(apps);
+  } catch (err) {
+    return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 });
   }
-  
-  return NextResponse.json(mockApplications);
 }
 
+/**
+ * POST /api/applications
+ * Create a new application on the backend.
+ */
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { schemeId, name } = body;
-    
-    if (!schemeId || !name) {
-      return NextResponse.json({ error: "schemeId and name are required" }, { status: 400 });
+    const { schemeId, name, userId } = body;
+
+    if (!schemeId) {
+      return NextResponse.json({ error: "schemeId is required" }, { status: 400 });
     }
 
-    // Check if it already exists
-    const existing = mockApplications.find(a => a.schemeId === schemeId);
-    if (existing) {
-      return NextResponse.json(existing);
+    const result = await backendRequest("/api/applications", {
+      method: "POST",
+      body: JSON.stringify({
+        user_id: userId || "demo-user",
+        scheme_id: schemeId,
+      }),
+    });
+
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    const newApp = {
-      id: `app-${schemeId}`,
-      schemeId,
-      name,
-      status: "Preparing Application",
-      reason: "Initializing verification steps: profile loading, documents verification.",
-      updatedAt: "Just now",
-      workflow: {
-        profile: "completed",
-        eligibility: "in_progress",
-        documents: "pending",
-        application: "pending",
-        review: "pending",
-        otp: "locked"
-      },
-      history: [
-        { event: "Application initiated by agent", status: "success", timestamp: "Just now" },
-        { event: "Profile verified", status: "success", timestamp: "Just now" }
-      ]
-    };
-
-    addApplication(newApp);
-    return NextResponse.json(newApp, { status: 201 });
+    const app = transformApplication(result.data);
+    // Attach the scheme name if provided
+    if (name) app.name = name;
+    return NextResponse.json(app, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: "Invalid application payload" }, { status: 400 });
   }

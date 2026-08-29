@@ -26,6 +26,11 @@ export function AppProvider({ children }) {
   const [chatHistory, setChatHistory] = useState([]);
   const [agentState, setAgentState] = useState("Neutral");
 
+  // Chat session state — preserves Agent Core session across messages
+  const [sessionId, setSessionId] = useState(() => {
+    try { return localStorage.getItem("hazela_session_id") || null; } catch { return null; }
+  });
+
   // Chat input prefixing for context routing
   const [pendingPrompt, setPendingPrompt] = useState("");
 
@@ -79,12 +84,13 @@ export function AppProvider({ children }) {
 
   // Fetch data when user is authenticated and onboarding is complete
   const refreshData = useCallback(async () => {
+    const userId = user?.uid || user?.id || "demo-user";
     try {
       const [profileRes, schemesRes, appsRes, docsRes] = await Promise.all([
-        fetch("/api/profile"),
+        fetch(`/api/profile?user_id=${encodeURIComponent(userId)}`),
         fetch("/api/schemes"),
-        fetch("/api/applications"),
-        fetch("/api/documents"),
+        fetch(`/api/applications?user_id=${encodeURIComponent(userId)}`),
+        fetch(`/api/documents?user_id=${encodeURIComponent(userId)}`),
       ]);
 
       if (profileRes.ok) {
@@ -95,9 +101,9 @@ export function AppProvider({ children }) {
       if (appsRes.ok) setApplications(await appsRes.json());
       if (docsRes.ok) setDocuments(await docsRes.json());
     } catch (error) {
-      console.error("Error loading mock database in AppContext:", error);
+      console.error("Error loading data from backend:", error);
     }
-  }, []);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (user?.onboardingCompleted && !fetchedRef.current) {
@@ -108,6 +114,7 @@ export function AppProvider({ children }) {
 
   // ─── Profile Persistence (localStorage) ───────────────────────────────────
   // Store app-specific profile keyed by Firebase UID.
+  // Also persists chat session for continuity.
   function getStoredProfile(uid) {
     try {
       const raw = localStorage.getItem(`hazela_profile_${uid}`);
@@ -223,7 +230,10 @@ export function AppProvider({ children }) {
 
     // Clear local app state
     if (user?.uid) removeStoredProfile(user.uid);
-    try { localStorage.removeItem("hazela_user"); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem("hazela_user");
+      localStorage.removeItem("hazela_session_id");
+    } catch { /* ignore */ }
     setUser(null);
     fetchedRef.current = false;
     setSchemes([]);
@@ -232,6 +242,7 @@ export function AppProvider({ children }) {
     setChatHistory([]);
     setAgentState("Neutral");
     setPendingPrompt("");
+    setSessionId(null);
 
     router.push("/");
   };
@@ -244,37 +255,47 @@ export function AppProvider({ children }) {
       const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profileData, onboardingCompleted: true }),
+        body: JSON.stringify({ ...profileData, user_id: user?.uid || user?.id || "demo-user", onboardingCompleted: true }),
       });
 
       const updatedProfile = res.ok ? await res.json() : profileData;
 
       // Merge and persist
-      const fullProfile = {
-        ...updatedProfile,
-        onboardingCompleted: true,
-      };
+    const fullProfile = {
+      ...updatedProfile,
+      onboardingCompleted: true,
+    };
 
-      if (user?.uid) {
-        saveStoredProfile(user.uid, fullProfile);
-      }
-
-      setUser((prev) => (prev ? { ...prev, ...fullProfile } : prev));
-      router.push("/chat");
-    } catch (error) {
-      console.error("Onboarding API error:", error);
-      // Still mark onboarded locally so user isn't stuck
-      if (user?.uid) {
-        saveStoredProfile(user.uid, { ...profileData, onboardingCompleted: true });
-      }
-      setUser((prev) =>
-        prev ? { ...prev, ...profileData, onboardingCompleted: true } : prev
-      );
-      router.push("/chat");
+    if (user?.uid) {
+      saveStoredProfile(user.uid, fullProfile);
     }
+
+    setUser((prev) => (prev ? { ...prev, ...fullProfile } : prev));
+    router.push("/chat");
+  } catch (error) {
+    console.error("Onboarding API error:", error);
+    // Still mark onboarded locally so user isn't stuck
+    // Also save profile to backend for future reference
+    try {
+      await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...profileData, user_id: user?.uid || user?.id || "demo-user" }),
+      });
+    } catch {}
+    if (user?.uid) {
+      saveStoredProfile(user.uid, { ...profileData, onboardingCompleted: true });
+    }
+    setUser((prev) =>
+      prev ? { ...prev, ...profileData, onboardingCompleted: true } : prev
+    );
+    router.push("/chat");
+  }
   };
 
   // ─── Chat ─────────────────────────────────────────────────────────────────
+  // Session persistence: sessionId is stored in localStorage and reused across
+  // messages so the Agent Core maintains conversational context.
 
   const sendMessage = async (text, schemeContext = null, applicationContext = null) => {
     const userMsg = {
@@ -284,17 +305,32 @@ export function AppProvider({ children }) {
       timestamp: "Just now",
     };
     setChatHistory((prev) => [...prev, userMsg]);
-    setAgentState("Thinking");
+    setAgentState("Attentive");
+
+    const userId = user?.uid || user?.id || "demo-user";
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, schemeContext, applicationContext }),
+        body: JSON.stringify({
+          message: text,
+          schemeContext,
+          applicationContext,
+          userId,
+          sessionId,
+        }),
       });
 
       if (res.ok) {
         const data = await res.json();
+
+        // Store session_id from backend for continuity across messages
+        if (data.sessionId) {
+          setSessionId(data.sessionId);
+          try { localStorage.setItem("hazela_session_id", data.sessionId); } catch {}
+        }
+
         setChatHistory((prev) => [...prev, data.chatMessage]);
         const newState = data.agentState || "Neutral";
         setAgentState(newState);
@@ -305,6 +341,20 @@ export function AppProvider({ children }) {
         if (data.updatedProfile) {
           setUser((prev) => (prev ? { ...prev, ...data.updatedProfile } : prev));
         }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            id: `msg-err-${Date.now()}`,
+            sender: "agent",
+            text: errData.error || "The agent encountered an issue. Please try again.",
+            timestamp: "Just now",
+            agentState: "Confused",
+          },
+        ]);
+        setAgentState("Confused");
+        setTimeout(() => setAgentState("Neutral"), 4000);
       }
     } catch (error) {
       console.error("Chat API error:", error);
@@ -313,7 +363,7 @@ export function AppProvider({ children }) {
         {
           id: `msg-err-${Date.now()}`,
           sender: "agent",
-          text: "I encountered a local network issue checking that. Please retry.",
+          text: "I encountered a network issue. Please check if the backend is running and try again.",
           timestamp: "Just now",
           agentState: "Confused",
         },
@@ -360,7 +410,7 @@ export function AppProvider({ children }) {
       const res = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ schemeId: scheme.id, name: scheme.name }),
+        body: JSON.stringify({ schemeId: scheme.id, name: scheme.name, userId: user?.uid || user?.id || "demo-user" }),
       });
 
       if (res.ok) {
@@ -383,7 +433,7 @@ export function AppProvider({ children }) {
       const res = await fetch("/api/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: docType, expiryDate }),
+        body: JSON.stringify({ type: docType, expiryDate, userId: user?.uid || user?.id || "demo-user" }),
       });
       if (res.ok) {
         const newDoc = await res.json();
