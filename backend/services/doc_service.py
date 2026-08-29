@@ -121,3 +121,11 @@ def match_documents(
 
 def _label(document_type: DocumentType) -> str:
     return document_type.value.replace("_", " ")
+
+
+# ---------------------------------------------------------------------------
+# Test helper — clears the in-memory store between tests
+# ---------------------------------------------------------------------------
+def _reset_store_for_tests() -> None:
+    global _DOCUMENTS
+    _DOCUMENTS.clear()

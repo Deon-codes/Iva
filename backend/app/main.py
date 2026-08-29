@@ -122,10 +122,6 @@ def root():
 # Dev entrypoint
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Register Voice Router
-from app.routes.voice import router as voice_router
-app.include_router(voice_router)
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(

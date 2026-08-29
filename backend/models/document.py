@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Dict, Optional
 
 
 class DocumentType(str, Enum):
@@ -23,8 +23,9 @@ class DocumentType(str, Enum):
 
 class DocumentStatus(str, Enum):
     VALID = "valid"
-    EXPIRED = "expired"                    # already past expiry_date as of today
-    EXPIRES_BEFORE_DEADLINE = "expires_before_deadline"  # not expired yet, but will be before a given scheme deadline
+    EXPIRED = "expired"
+    EXPIRES_BEFORE_DEADLINE = "expires_before_deadline"
+    EXPIRING_SOON = "expiring_soon"
 
 
 def _parse_date(value: Optional[str]) -> Optional[date]:
@@ -36,45 +37,62 @@ def _parse_date(value: Optional[str]) -> Optional[date]:
 @dataclass
 class Document:
     id: str
-    user_id: str
     type: DocumentType
+    user_id: str = ""
     name: Optional[str] = None
-    issue_date: Optional[str] = None   # ISO date string, e.g. "2025-04-01"
-    expiry_date: Optional[str] = None  # ISO date string; None = does not expire
+    issue_date: Optional[str] = None
+    expiry_date: Optional[str] = None
     status: DocumentStatus = DocumentStatus.VALID
+    # camelCase fields used by app.services.doc_service
+    userId: Optional[str] = None
+    issueDate: Optional[date] = None
+    expiryDate: Optional[date] = None
+    extractedFields: Dict[str, Any] = field(default_factory=dict)
+    sourceFilename: Optional[str] = None
+
+    def __post_init__(self):
+        if self.userId is None:
+            self.userId = self.user_id
+        elif not self.user_id:
+            self.user_id = self.userId
 
     def compute_status(self, deadline: Optional[str] = None, today: Optional[date] = None) -> DocumentStatus:
-        """
-        Deterministic status computation — never invents an expiry period.
-        Only uses expiry_date actually present on the document and the
-        deadline actually passed in by the caller (a real scheme deadline).
-        """
         today = today or date.today()
         expiry = _parse_date(self.expiry_date)
-
         if expiry is None:
             return DocumentStatus.VALID
-
         if expiry < today:
             return DocumentStatus.EXPIRED
-
         deadline_date = _parse_date(deadline)
         if deadline_date is not None and expiry < deadline_date:
             return DocumentStatus.EXPIRES_BEFORE_DEADLINE
-
         return DocumentStatus.VALID
 
 
 @dataclass
 class DocumentMatchResult:
-    required: list[DocumentType]
-    present: list[DocumentType]
-    missing: list[DocumentType]
-    expired: list[DocumentType]
-    expires_before_deadline: list[DocumentType]
+    required: list
+    present: list = field(default_factory=list)
+    missing: list = field(default_factory=list)
+    expired: list = field(default_factory=list)
+    expires_before_deadline: list = field(default_factory=list)
     summary: list[str] = field(default_factory=list)
+    userId: Optional[str] = None
+    matched: list = field(default_factory=list)
+    all_satisfied: bool = False
+    message: str = ""
 
     @property
     def is_complete(self) -> bool:
-        """True only if every required document is present AND none are expired."""
         return not self.missing and not self.expired
+
+
+@dataclass
+class ExpiryCheckResult:
+    documentId: str = ""
+    documentType: Any = None
+    expiryDate: Optional[date] = None
+    deadline: Optional[date] = None
+    is_expired: bool = False
+    expires_before_deadline: bool = False
+    message: str = ""

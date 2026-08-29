@@ -22,7 +22,7 @@ from datetime import date, timedelta
 import pytest
 
 from models.document import DocumentStatus, DocumentType
-from services import doc_service
+from app.services import doc_service
 
 
 @pytest.fixture(autouse=True)

@@ -4,7 +4,6 @@ import uuid
 from typing import Dict, Any, Optional
 from twilio.twiml.voice_response import VoiceResponse, Gather
 from dotenv import load_dotenv
-
 logger = logging.getLogger(__name__)
 
 # Load the root .env file robustly relative to this source file
