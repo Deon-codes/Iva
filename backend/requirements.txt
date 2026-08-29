@@ -8,16 +8,19 @@ pydantic>=2.6.0
 pydantic-settings>=2.2.0
 
 # ── Google ADK + Gemini ───────────────────────────────────────────────────────
-google-adk>=1.0.0                # Agent Development Kit
-google-generativeai>=0.8.0       # Gemini SDK (used directly for legitimacy rules)
+google-adk>=1.0.0                # Agent Development Kit (ADK runners, agents, tools)
+google-generativeai>=0.8.0       # Gemini SDK (used by status_agent for explanations)
 google-cloud-firestore>=2.16.0
 google-cloud-pubsub>=2.21.0
+
+# ── Telephony / Voice ─────────────────────────────────────────────────────────
+twilio>=9.0.0                    # TwiML generation, Twilio webhooks
 
 # ── Env / secrets ─────────────────────────────────────────────────────────────
 python-dotenv>=1.0.1
 
-# ── HTTP client (legitimacy agent fetches gov pages) ─────────────────────────
-httpx>=0.27.0
+# ── HTTP client ───────────────────────────────────────────────────────────────
+httpx>=0.27.0                    # FastAPI TestClient + agent HTTP calls
 
 # ── Async utilities ───────────────────────────────────────────────────────────
 anyio>=4.3.0
@@ -25,4 +28,3 @@ anyio>=4.3.0
 # ── Testing ───────────────────────────────────────────────────────────────────
 pytest>=8.1.0
 pytest-asyncio>=0.23.6
-httpx>=0.27.0                    # used by FastAPI TestClient too

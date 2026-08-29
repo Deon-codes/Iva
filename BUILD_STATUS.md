@@ -1,28 +1,50 @@
-# Build Status - Hazela Agent Frontend Workspace
+# BUILD_STATUS.md — Voice / IVR Workspace (`feature/voice-ivr` / Branch C)
 
-## ✅ Completed
-- Authenticated dashboard shell (`layout.jsx`) with desktop sidebar, mobile hamburger drawer, and Bloub agent identity using SVG assets from `public/`.
-- Chat/Agent workspace (`/chat`) rebuilt: desktop 2-column layout (center workspace + right work cards/trending), mobile section nav + chat bubbles, Bloub morphing states, agent activity steps, contextual work cards, and Deeper Research input bar.
-- Explore page (`/explore`) rebuilt with green design tokens, search/filters, scheme cards, legitimacy badges, and Ask Agent / Prepare Application handoffs.
-- Applications page (`/applications`) rebuilt with pipeline visualization, OTP consent modal, and Chat handoff actions.
-- Fixed missing `updateApplication` in `AppContext` and added `PATCH /api/applications/[id]` route handler.
-- Fixed Bloub `Surprised` state asset path (`bloub-suprised.svg` typo in filename).
-- Production build verified (`npm run build` passes).
+> Read this before every session. Update after every meaningful milestone.
+> Never mark something ✅ unless it is implemented **AND** tested.
+
+---
+
+## ✅ Completed Work
+
+- **Inspected the Repository**: Understood the architectural design, remote branches (`origin/A`, `origin/B`, `origin/D`), and dependencies.
+- **Voice Service (`voice_service.py`)**: Implemented call session tracking (`CallSid` mapped to ADK session IDs), TwiML builder, language detection, and routing.
+- **Twilio Webhooks (`routes/voice.py`)**: Implemented incoming call (`/incoming`), response gather (`/respond`), and status callback (`/status`) endpoints.
+- **Mock Voice Agent**: Built a structured mock state machine for scholarship eligibility, document queries, status updates, and OTP warning redirects. The mock mode is strictly opt-in and prefixed with `[MOCK SIMULATION]`.
+- **JSON Mock API (`/mock`)**: Created a dedicated testing route that avoids TwiML XML formats and operates strictly on JSON structures.
+- **Integration Router (`main.py`)**: Registered `/api/voice` route endpoints.
+- **Automated Tests (`test_voice_ivr.py`)**: Implemented all 10 required test scenarios. All 9 test suites pass successfully.
+- **Mock Call CLI (`mock_call_cli.py`)**: Built an interactive terminal-based simulator for manual turn-by-turn verification of the voice channel.
+
+---
 
 ## 🔄 In Progress
-- None.
 
-## ⏳ Remaining
-- Documents page still uses legacy `paper-*` / `ink-*` Tailwind classes (functional but visually inconsistent with dashboard).
-- Login/signup pages still use legacy palette (unchanged per scope — landing/auth not in this task).
+- Final handoff documentation (walkthrough) creation.
 
-## 🚫 Blockers
-- None.
+---
+
+## ⏳ Remaining Work
+
+- [ ] P1: Deploy to Google Cloud Run when final GCP integration takes place.
+- [ ] P1: Integrate outbound status change voice triggers when Person 4's event/pub-sub architecture is completed and merged.
+
+---
+
+## 🚫 Blockers or Issues
+
+- None. Branch C is fully self-contained, tested, and ready to be merged.
+
+---
 
 ## ➡️ Exact Next Step
-- Run `npm run dev` and walk the demo path: Login → Chat → Explore → Prepare Application → Applications → OTP handoff → Chat context handoff.
 
-## 💡 Important Technical Decisions
-- Dashboard pages use inline green design tokens matching `globals.css` rather than undefined `paper-*` / `ink-*` classes.
-- Chat relies on layout sidebar for primary navigation on desktop; chat page adds mobile section pills (Chat | Explore | Applications).
-- Bloub assets are loaded from `/bloub-{state}.svg` with special-case mapping for the misspelled `suprised` file.
+- Team lead to merge branch C into main once the sptrint concludes.
+
+---
+
+## 💡 Technical Decisions
+
+- **Telephony Provider**: Twilio is used as the telephony adapter.
+- **Strict Error Handlers**: In production configuration, failures in calling the real agent orchestrator raise a RuntimeError and trigger a clear failure TwiML error message (Technical Difficulties) rather than silently fabricating responses.
+- **Simulated Banner**: All mock responses are prefixed with `[MOCK SIMULATION]` to clearly demarcate mock data from official government scheme services.
