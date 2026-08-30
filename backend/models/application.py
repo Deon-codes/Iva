@@ -99,6 +99,7 @@ class StatusEvent:
     explanation: Optional[str]
     next_action: Optional[str]
     correction_draft: Optional[CorrectionDraft] = None
+    verification_context: dict = field(default_factory=dict)
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     @staticmethod
@@ -111,6 +112,7 @@ class StatusEvent:
         explanation: Optional[str] = None,
         next_action: Optional[str] = None,
         correction_draft: Optional[CorrectionDraft] = None,
+        verification_context: Optional[dict] = None,
     ) -> "StatusEvent":
         return StatusEvent(
             id=str(uuid.uuid4()),
@@ -122,4 +124,5 @@ class StatusEvent:
             explanation=explanation,
             next_action=next_action,
             correction_draft=correction_draft,
+            verification_context=verification_context or {},
         )

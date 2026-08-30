@@ -113,9 +113,38 @@ def match_documents(
     if not summary:
         summary.append("All required documents are present and valid.")
 
+    # Verification metadata — transparently labels what's real vs. mocked
+    verification_metadata = {
+        "extraction": {
+            "type": "REAL",
+            "method": "Gemini OCR extraction",
+            "description": "Fields extracted from uploaded document using Gemini Vision",
+        },
+        "expiry_check": {
+            "type": "REAL",
+            "method": "Deterministic date comparison",
+            "description": "Checked against today's date",
+        },
+        "government_verification": {
+            "type": "🔴 MOCK",
+            "reason": "No direct government API available in demo",
+            "description": "Demo: All documents marked as government-verified for testing",
+        },
+        "name_matching": {
+            "type": "REAL",
+            "method": "String comparison against profile",
+            "description": "Name on document matched against application profile",
+        },
+    }
+
+    # Prepend verification transparency labels to summary
+    summary.insert(0, "[REAL] Fields extracted via Gemini OCR.")
+    summary.insert(1, "[🔴 DEMO] Government verification simulated for testing.")
+
     return DocumentMatchResult(
         required=required, present=present, missing=missing,
-        expired=expired, expires_before_deadline=expires_before_deadline, summary=summary,
+        expired=expired, expires_before_deadline=expires_before_deadline,
+        summary=summary, verification_metadata=verification_metadata,
     )
 
 

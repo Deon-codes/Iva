@@ -93,6 +93,7 @@ def _event_to_dict(event: StatusEvent) -> dict:
         "new_status": event.new_status.value, "gov_status_raw": event.gov_status_raw,
         "reason": event.reason, "explanation": event.explanation,
         "next_action": event.next_action, "correction_draft": _draft_to_dict(event.correction_draft),
+        "verification_context": event.verification_context,
         "created_at": event.created_at,
     }
 
@@ -188,10 +189,32 @@ def check_application_status(application_id: str) -> Optional[StatusEvent]:
 
     _save_application(application)
 
+    verification_context = {
+        "government_check": {
+            "type": "🔴 MOCK",
+            "source": "Mock government portal (demo only)",
+            "description": "In production, this would poll actual government APIs (API Setu, DigiLocker, etc.)",
+        },
+        "status_poll": {
+            "type": "REAL",
+            "description": "Background job polls for status changes every N minutes (Cloud Scheduler in prod)",
+        },
+        "explanation_generation": {
+            "type": "REAL",
+            "method": "Gemini LLM",
+            "description": "Agent generates plain-language explanation for rejection reasons",
+        },
+        "correction_draft": {
+            "type": "REAL",
+            "description": "Agent builds actionable correction plan based on rejection reason",
+        },
+    }
+
     event = StatusEvent.new(
         application_id=application_id, previous_status=previous_status, new_status=new_status,
         gov_status_raw=gov_response["status"], reason=reason, explanation=explanation,
         next_action=next_action, correction_draft=correction_draft,
+        verification_context=verification_context,
     )
     _save_event(event)
 

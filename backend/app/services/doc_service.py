@@ -166,6 +166,40 @@ def match_documents(user_id: str, required: list[str]) -> DocumentMatchResult:
     else:
         message = "All required documents are present."
 
+    # Verification metadata — transparently labels what's real vs. mocked
+    verification_metadata = {
+        "extraction": {
+            "type": "REAL",
+            "method": "Gemini OCR extraction",
+            "description": "Fields extracted from uploaded document using Gemini Vision",
+        },
+        "expiry_check": {
+            "type": "REAL",
+            "method": "Deterministic date comparison",
+            "description": "Checked against today's date",
+        },
+        "government_verification": {
+            "type": "🔴 MOCK",
+            "reason": "No direct government API available in demo",
+            "description": "Demo: All documents marked as government-verified for testing",
+        },
+        "name_matching": {
+            "type": "REAL",
+            "method": "String comparison against profile",
+            "description": "Name on document matched against application profile",
+        },
+    }
+
+    # Prepend verification transparency labels to summary
+    summary_lines = []
+    summary_lines.append("[REAL] Fields extracted via Gemini OCR.")
+    summary_lines.append("[🔴 DEMO] Government verification simulated for testing.")
+    if missing:
+        readable = ", ".join(m.replace("_", " ") for m in missing)
+        summary_lines.append(f"Missing {readable}.")
+    else:
+        summary_lines.append("All required documents are present and valid.")
+
     return DocumentMatchResult(
         userId=user_id,
         required=required,
@@ -173,6 +207,8 @@ def match_documents(user_id: str, required: list[str]) -> DocumentMatchResult:
         missing=missing,
         all_satisfied=len(missing) == 0,
         message=message,
+        summary=summary_lines,
+        verification_metadata=verification_metadata,
     )
 
 

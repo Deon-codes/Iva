@@ -48,6 +48,21 @@ class MatchDocumentsRequest(BaseModel):
     deadline: Optional[str] = None  # ISO date; the scheme's actual deadline, if known
 
 
+class VerificationStatusResponse(BaseModel):
+    """What's real vs. mocked in this demo — for transparency."""
+    extraction: dict
+    expiry_checking: dict
+    aadhaar_verification: dict
+    caste_certificate_verification: dict
+    income_verification: dict
+    government_portal_submission: dict
+    government_portal_polling: dict
+    government_captcha: dict
+    document_vault_ui: dict
+    form_preparation: dict
+    voice_notification: dict
+
+
 @router.post("/api/documents", response_model=DocumentResponse, status_code=201)
 def upload_document(payload: CreateDocumentRequest):
     if doc_service.get_document(payload.user_id, payload.id) is not None:
@@ -78,3 +93,21 @@ def match_documents(payload: MatchDocumentsRequest):
         required=payload.required,
         deadline=payload.deadline,
     )
+
+
+@router.get("/api/verification/status")
+def get_verification_status():
+    """Returns what's real vs. mocked in this demo — transparency endpoint."""
+    return {
+        "extraction": {"type": "REAL", "tool": "Gemini Vision"},
+        "expiry_checking": {"type": "REAL", "method": "Date comparison"},
+        "aadhaar_verification": {"type": "🔴 MOCK", "reason": "No API access"},
+        "caste_certificate_verification": {"type": "🔴 MOCK", "reason": "No API access"},
+        "income_verification": {"type": "🔴 MOCK", "reason": "No API access"},
+        "government_portal_submission": {"type": "🔴 MOCK", "reason": "Test portal only"},
+        "government_portal_polling": {"type": "🔴 MOCK", "reason": "Test portal only"},
+        "government_captcha": {"type": "🔴 MOCK", "reason": "No CAPTCHA in demo"},
+        "document_vault_ui": {"type": "🟡 HANDOFF", "owner": "Person 2"},
+        "form_preparation": {"type": "🟡 HANDOFF", "owner": "Person 2"},
+        "voice_notification": {"type": "🟡 HANDOFF", "owner": "Person 3"},
+    }

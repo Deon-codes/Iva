@@ -21,6 +21,14 @@ class DocumentType(str, Enum):
     OTHER = "other"
 
 
+class VerificationStatus(str, Enum):
+    """Labels whether a check is real, mocked, or a handoff."""
+    EXTRACTED = "extracted"               # REAL: OCR/Gemini extracted fields
+    DEMO_VERIFIED = "demo_verified"       # 🔴 MOCK: Simulated government verification
+    NOT_VERIFIED = "not_verified"         # 🟡 Handoff: User will verify manually
+    GOVERNMENT_VERIFIED = "government_verified"  # Future: Real gov API
+
+
 class DocumentStatus(str, Enum):
     VALID = "valid"
     EXPIRED = "expired"
@@ -77,6 +85,7 @@ class DocumentMatchResult:
     expired: list = field(default_factory=list)
     expires_before_deadline: list = field(default_factory=list)
     summary: list[str] = field(default_factory=list)
+    verification_metadata: dict = field(default_factory=dict)
     userId: Optional[str] = None
     matched: list = field(default_factory=list)
     all_satisfied: bool = False

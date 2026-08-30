@@ -1,6 +1,6 @@
 # BUILD_STATUS — Person 4 (Documents + Async Status + Testing)
 
-Last updated: this session (pytest integration suite added, gap audit against full spec done)
+Last updated: this session (verification transparency layer added)
 
 ## ✅ Completed
 
@@ -19,6 +19,13 @@ Last updated: this session (pytest integration suite added, gap audit against fu
 - `dev_app.py` wires all three routers
 - **Automated integration test suite** (`tests/test_documents.py`, `tests/test_status_flow.py`) — 15 tests, all passing, covering every item in the spec's "Also test" list: missing document, expired document, approved application, rejected application, invalid state transition, duplicate status event, retry behavior (repeated polling over simulated time), full end-to-end lifecycle
 - Manual Swagger walkthrough verified against the same scenarios
+- **Verification transparency layer** — every document/status check is now labeled as REAL, 🔴 MOCK, or 🟡 HANDOFF:
+  - `models/document.py`: `VerificationStatus` enum (`EXTRACTED`, `DEMO_VERIFIED`, `NOT_VERIFIED`, `GOVERNMENT_VERIFIED`); `DocumentMatchResult` includes `verification_metadata` dict
+  - `services/doc_service.py`: `match_documents()` returns `verification_metadata` with labels for extraction (REAL), expiry check (REAL), government verification (🔴 MOCK), name matching (REAL)
+  - `agents/status_agent.py`: `StatusEvent` includes `verification_context` labeling mock government checks, real polling, real Gemini explanation, real correction draft
+  - `routes/doc.py`: new `GET /api/verification/status` endpoint listing all components and their type (REAL/🔴 MOCK/🟡 HANDOFF)
+  - Summary lines now include `[REAL]` and `[🔴 DEMO]` prefixes for transparency
+  - 3 new tests verifying metadata presence and labels (`test_match_documents_includes_verification_metadata`, `test_match_documents_summary_includes_verification_labels`, `test_match_documents_with_missing_includes_labels`)
 
 ## ❌ Not done — real gaps against the spec, not just polish
 

@@ -184,3 +184,42 @@ def test_expired_document_counts_as_missing_in_matching():
     result = doc_service.match_documents("user_007", ["income_certificate"])
     assert result.all_satisfied is False
     assert "income_certificate" in result.missing
+
+
+# ---------------------------------------------------------------------------
+# Verification metadata — transparency labels for real vs. mock
+# ---------------------------------------------------------------------------
+def test_match_documents_includes_verification_metadata():
+    doc_service.upload_document("user_008", DocumentType.INCOME_CERTIFICATE, {"name": "X"})
+    doc_service.upload_document("user_008", DocumentType.CASTE_CERTIFICATE, {"name": "X"})
+
+    result = doc_service.match_documents(
+        "user_008",
+        ["income_certificate", "caste_certificate"],
+    )
+    assert "verification_metadata" in dir(result) or hasattr(result, "verification_metadata")
+    meta = result.verification_metadata
+    assert meta["government_verification"]["type"] == "🔴 MOCK"
+    assert meta["extraction"]["type"] == "REAL"
+    assert meta["expiry_check"]["type"] == "REAL"
+    assert meta["name_matching"]["type"] == "REAL"
+
+
+def test_match_documents_summary_includes_verification_labels():
+    doc_service.upload_document("user_009", DocumentType.INCOME_CERTIFICATE, {"name": "X"})
+
+    result = doc_service.match_documents(
+        "user_009",
+        ["income_certificate"],
+    )
+    summary_text = " ".join(result.summary)
+    assert "[REAL]" in summary_text
+    assert "[🔴 DEMO]" in summary_text
+
+
+def test_match_documents_with_missing_includes_labels():
+    result = doc_service.match_documents("user_010", ["income_certificate"])
+    summary_text = " ".join(result.summary)
+    assert "[REAL]" in summary_text
+    assert "[🔴 DEMO]" in summary_text
+    assert "Missing" in summary_text
