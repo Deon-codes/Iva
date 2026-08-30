@@ -4,6 +4,7 @@ Pydantic models for Chat API (POST /api/chat).
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
@@ -36,3 +37,35 @@ class ChatResponse(BaseModel):
     suggested_next_steps: List[str] = Field(default_factory=list)
     # Populated when the agent has prepared an application
     prepared_application_id: Optional[str] = None
+
+
+# ─── Chat History models ─────────────────────────────────────────────────────
+
+class ChatMessage(BaseModel):
+    """A single message in a conversation."""
+
+    role: str               # "user" | "agent"
+    content: str
+    timestamp: str = "Just now"
+    actions: List[AgentAction] = Field(default_factory=list)
+
+
+class ChatSession(BaseModel):
+    """A conversation session."""
+
+    id: str
+    user_id: str
+    title: str = "New chat"
+    messages: List[ChatMessage] = Field(default_factory=list)
+    created_at: str = ""
+    updated_at: str = ""
+
+
+class ChatSessionListItem(BaseModel):
+    """Lightweight projection for the history sidebar."""
+
+    id: str
+    title: str
+    last_message: str = ""
+    updated_at: str = ""
+    message_count: int = 0

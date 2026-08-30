@@ -26,8 +26,10 @@ async def create_profile(body: UserProfileCreate) -> UserProfile:
 
 @router.get("/profile", response_model=UserProfile, summary="Retrieve a user profile")
 async def get_profile(user_id: str = Query(..., description="The user ID")) -> UserProfile:
-    """Retrieve an existing user profile by user_id."""
+    """Retrieve an existing user profile by user_id.
+    Returns a default empty profile if none exists yet (avoids 404 for new users)."""
     profile = await fs.get_user(user_id)
     if profile is None:
-        raise HTTPException(status_code=404, detail=f"User profile '{user_id}' not found.")
+        # Return a clean empty profile rather than 404 — the user may not have created one yet
+        return UserProfile(id=user_id, name="", email="")
     return UserProfile(**profile)

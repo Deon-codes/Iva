@@ -31,6 +31,7 @@ class _InMemoryStore:
             "documents": {},
             "applications": {},
             "application_events": {},
+            "chat_sessions": {},
         }
 
     def get(self, collection: str, doc_id: str) -> Optional[Dict[str, Any]]:
@@ -276,6 +277,81 @@ async def list_documents_for_user(user_id: str) -> List[Dict[str, Any]]:
         return _stub.list("documents", filters={"user_id": user_id})
     docs = client.collection("documents").where("user_id", "==", user_id).stream()
     return [doc.to_dict() async for doc in docs]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Chat Sessions (in-memory persistence for dev)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+async def create_chat_session(user_id: str, session_id: str, title: str = "New chat") -> Dict[str, Any]:
+    now = datetime.utcnow().isoformat()
+    data: Dict[str, Any] = {
+        "id": session_id,
+        "user_id": user_id,
+        "title": title,
+        "messages": [],
+        "created_at": now,
+        "updated_at": now,
+    }
+    client = _get_client()
+    if client is None:
+        _stub.set("chat_sessions", session_id, data)
+        return data
+    await client.collection("chat_sessions").document(session_id).set(data)
+    return data
+
+
+async def get_chat_session(session_id: str) -> Optional[Dict[str, Any]]:
+    client = _get_client()
+    if client is None:
+        return _stub.get("chat_sessions", session_id)
+    doc = await client.collection("chat_sessions").document(session_id).get()
+    return doc.to_dict() if doc.exists else None
+
+
+async def append_chat_message(session_id: str, message: Dict[str, Any]) -> Dict[str, Any]:
+    client = _get_client()
+    if client is None:
+        existing = _stub.get("chat_sessions", session_id)
+        if existing is None:
+            return {}
+        existing["messages"].append(message)
+        existing["updated_at"] = datetime.utcnow().isoformat()
+        _stub.set("chat_sessions", session_id, existing)
+        return existing
+    ref = client.collection("chat_sessions").document(session_id)
+    doc = await ref.get()
+    if not doc.exists:
+        return {}
+    data = doc.to_dict()
+    data["messages"].append(message)
+    data["updated_at"] = datetime.utcnow().isoformat()
+    await ref.set(data)
+    return data
+
+
+async def update_chat_session_title(session_id: str, title: str) -> None:
+    client = _get_client()
+    if client is None:
+        existing = _stub.get("chat_sessions", session_id)
+        if existing:
+            existing["title"] = title
+            _stub.set("chat_sessions", session_id, existing)
+        return
+    await client.collection("chat_sessions").document(session_id).update({"title": title})
+
+
+async def list_chat_sessions_for_user(user_id: str) -> List[Dict[str, Any]]:
+    client = _get_client()
+    if client is None:
+        sessions = _stub.list("chat_sessions", filters={"user_id": user_id})
+        sessions.sort(key=lambda s: s.get("updated_at", ""), reverse=True)
+        return sessions
+    docs = client.collection("chat_sessions").where("user_id", "==", user_id).stream()
+    sessions = [doc.to_dict() async for doc in docs]
+    sessions.sort(key=lambda s: s.get("updated_at", ""), reverse=True)
+    return sessions
 
 
 # ─────────────────────────────────────────────────────────────────────────────

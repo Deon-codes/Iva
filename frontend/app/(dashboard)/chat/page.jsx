@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useApp } from "../../context/AppContext";
-import { Target, AlertTriangle, FileText, Clock, CheckCircle, Check, Lock, CircleDot, Circle, ArrowUp } from "lucide-react";
+import { Target, AlertTriangle, FileText, Clock, CheckCircle, Check, Lock, CircleDot, Circle, ArrowUp, RotateCcw } from "lucide-react";
 
 const C = {
   bg: "#F5F3EF",
@@ -61,9 +61,11 @@ function daysUntilExpiry(expiryDate) {
 
 export default function ChatPage() {
   const {
-    chatHistory, agentState, sendMessage, setAgentState,
+    chatHistory, agentState, setAgentState, sendMessage, retryLastMessage,
     pendingPrompt, setPendingPrompt,
     applications, documents, schemes, user,
+    askAgentAboutScheme, prepareApplication,
+    refreshData,
   } = useApp();
 
   const [input, setInput] = useState("");
@@ -77,12 +79,16 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (pendingPrompt) {
-      fire(pendingPrompt);
+      if (typeof pendingPrompt === "string") {
+        fire(pendingPrompt);
+      } else {
+        fire(pendingPrompt.text, pendingPrompt.extraContext);
+      }
       setPendingPrompt("");
     }
   }, [pendingPrompt]);
 
-  async function fire(text) {
+  async function fire(text, extraContext = null) {
     if (!text.trim() || thinking) return;
     setThinking(true);
     const s = stepsFor(text).map((step, i) => ({ ...step, active: i === 0 }));
@@ -101,7 +107,7 @@ export default function ChatPage() {
       });
     }, 1400);
 
-    await sendMessage(text);
+    await sendMessage(text, extraContext);
     clearInterval(interval);
     setSteps([]);
     setThinking(false);
@@ -233,8 +239,25 @@ export default function ChatPage() {
         <div style={{ flex: 1, overflowY: "auto", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.875rem" }}>
           {chatHistory.map((msg) => (
             <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: msg.sender === "user" ? "flex-end" : "flex-start" }} className="slide-up">
-              <div className={msg.sender === "user" ? "msg-user" : "msg-agent"} style={{ maxWidth: "82%", padding: "0.625rem 1rem", fontSize: "0.875rem", lineHeight: 1.6, whiteSpace: "pre-line" }}>
+              <div className={msg.sender === "user" ? "msg-user" : "msg-agent"} style={{ maxWidth: "82%", padding: "0.625rem 1rem", fontSize: "0.875rem", lineHeight: 1.6, whiteSpace: "pre-line", ...(msg.isError ? { border: "1px solid #FFCDD2", background: "#FFF5F5", color: "#C62828" } : {}) }}>
+                {msg.isError && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                    <AlertTriangle size={14} color="#C62828" />
+                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#C62828", textTransform: "uppercase" }}>Error</span>
+                  </div>
+                )}
                 {msg.text}
+                {msg.isError && (
+                  <div style={{ marginTop: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => retryLastMessage()}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "0.4rem 0.75rem", borderRadius: 9999, border: "1px solid #C62828", background: "transparent", color: "#C62828", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                    >
+                      <RotateCcw size={12} /> Retry
+                    </button>
+                  </div>
+                )}
               </div>
               {msg.workCards?.map((card) => (
                 <div key={card.id} className="work-card" style={{ maxWidth: "82%", marginTop: 8, borderLeft: `4px solid ${card.status === "attention" ? "#C62828" : C.green800}` }}>
@@ -313,7 +336,7 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* ══════ RIGHT — Trending sidebar (desktop) ══════ */}
+      {/* ══════ RIGHT — Trending sidebar (desktop, xl+) ══════ */}
       <div className="hidden xl:flex" style={{ width: 300, flexShrink: 0, flexDirection: "column", borderLeft: `1px solid ${C.border}`, background: C.surface }}>
         <div style={{ padding: "1rem 1rem 0.75rem", borderBottom: `1px solid ${C.border}` }}>
           <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.dim }}>Trending for you</div>
@@ -321,7 +344,7 @@ export default function ChatPage() {
         <div style={{ flex: 1, overflowY: "auto", padding: "0 1rem" }}>
           {schemes.length > 0 ? (
             schemes.map((scheme) => (
-              <div key={scheme.id} style={{ padding: "0.75rem 0", borderBottom: `1px solid ${C.borderLight}`, cursor: "pointer", transition: "background 0.15s" }} className="trending-item">
+              <div key={scheme.id} style={{ padding: "0.75rem 0", borderBottom: `1px solid ${C.borderLight}` }} className="trending-item">
                 <div style={{ fontSize: "0.8125rem", fontWeight: 600, color: C.text, lineHeight: 1.4 }}>{scheme.name}</div>
                 <div style={{ fontSize: "0.68rem", color: C.dim, marginTop: 3 }}>{scheme.department}</div>
                 {scheme.deadline && (
@@ -329,6 +352,22 @@ export default function ChatPage() {
                     Deadline: {new Date(scheme.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                   </div>
                 )}
+                <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => askAgentAboutScheme(scheme)}
+                    style={{ padding: "0.3rem 0.6rem", borderRadius: 6, border: `1px solid ${C.border}`, background: C.surface, color: C.green800, fontSize: "0.68rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    Ask Agent
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => prepareApplication(scheme)}
+                    style={{ padding: "0.3rem 0.6rem", borderRadius: 6, border: "none", background: C.green800, color: "#fff", fontSize: "0.68rem", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    Prepare
+                  </button>
+                </div>
               </div>
             ))
           ) : (

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useApp } from "../context/AppContext";
 import { useRouter, usePathname } from "next/navigation";
-import { MessageCircle, Search, ClipboardList, FileText, X, Bell, ChevronDown, Target, AlertTriangle, Clock } from "lucide-react";
+import { MessageCircle, Search, ClipboardList, FileText, X, Bell, ChevronDown, Target, AlertTriangle, Clock, Plus, MessageSquare } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/chat",         label: "Chat",         icon: <MessageCircle size={18} />, desc: "Agent workspace" },
@@ -14,7 +14,7 @@ const NAV_ITEMS = [
 ];
 
 export default function DashboardLayout({ children }) {
-  const { user, loading, logout, agentState } = useApp();
+  const { user, loading, logout, agentState, conversations, loadingHistory, switchChat, newChat, sessionId } = useApp();
   const router = useRouter();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -85,6 +85,38 @@ export default function DashboardLayout({ children }) {
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: agentState === "Suspicious" ? "#C62828" : agentState === "Attentive" ? "#66BB6A" : "#A5D6A7", display: "inline-block" }} />
             {agentLabel}
           </div>
+        </div>
+      </div>
+
+      {/* Conversations + New Chat */}
+      <div style={{ padding: "0.75rem 0.75rem 0.5rem", borderBottom: "1px solid #F0EDE8" }}>
+        <button
+          onClick={() => { newChat(); if (onClose) onClose(); }}
+          style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", padding: "0.45rem 0.5rem", borderRadius: 8, border: "1px dashed #C8E6C9", background: "#F1F8E9", color: "#1B5E20", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: 6 }}
+        >
+          <Plus size={14} /> New chat
+        </button>
+        <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#A0A0A0", padding: "0 0.25rem 0.35rem" }}>Recent</div>
+        <div style={{ maxHeight: 160, overflowY: "auto" }}>
+          {loadingHistory ? (
+            <div style={{ padding: "0.5rem 0", textAlign: "center", color: "#A0A0A0", fontSize: "0.7rem" }}>Loading…</div>
+          ) : conversations.length === 0 ? (
+            <div style={{ padding: "0.5rem 0", textAlign: "center", color: "#C0C0C0", fontSize: "0.7rem" }}>No conversations yet</div>
+          ) : (
+            conversations.map((conv) => (
+              <button
+                key={conv.id}
+                type="button"
+                onClick={() => { switchChat(conv.id); if (onClose) onClose(); }}
+                style={{ display: "block", width: "100%", textAlign: "left", padding: "0.4rem 0.5rem", borderRadius: 6, border: "none", background: sessionId === conv.id ? "#E8F5E9" : "transparent", cursor: "pointer", fontFamily: "inherit", transition: "background 0.15s" }}
+              >
+                <div style={{ fontSize: "0.75rem", fontWeight: sessionId === conv.id ? 700 : 500, color: "#061508", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{conv.title}</div>
+                {conv.last_message && (
+                  <div style={{ fontSize: "0.65rem", color: "#A0A0A0", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{conv.last_message}</div>
+                )}
+              </button>
+            ))
+          )}
         </div>
       </div>
 

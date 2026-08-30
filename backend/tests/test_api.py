@@ -90,8 +90,13 @@ def test_create_and_get_profile(client, sample_user):
 
 
 def test_get_profile_not_found(client):
+    """GET /api/profile for a nonexistent user returns a default empty profile (200)."""
     resp = client.get("/api/profile?user_id=no_such_user_999")
-    assert resp.status_code == 404
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["id"] == "no_such_user_999"
+    assert data["name"] == ""
+    assert data["email"] == ""
 
 
 # ─────────────────────────────────────────────────────────────────────────────

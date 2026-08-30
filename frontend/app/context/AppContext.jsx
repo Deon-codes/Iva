@@ -27,9 +27,14 @@ export function AppProvider({ children }) {
   const [agentState, setAgentState] = useState("Neutral");
 
   // Chat session state — preserves Agent Core session across messages
-  const [sessionId, setSessionId] = useState(() => {
-    try { return localStorage.getItem("hazela_session_id") || null; } catch { return null; }
-  });
+  const [sessionId, setSessionId] = useState(null);
+
+  // Chat history — list of past conversations
+  const [conversations, setConversations] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // Last sent message for retry
+  const [lastMessage, setLastMessage] = useState(null);
 
   // Chat input prefixing for context routing
   const [pendingPrompt, setPendingPrompt] = useState("");
@@ -111,6 +116,59 @@ export function AppProvider({ children }) {
       refreshData();
     }
   }, [user?.onboardingCompleted, refreshData]);
+
+  // ─── Chat History ───────────────────────────────────────────────────────
+  const loadConversations = useCallback(async () => {
+    const userId = user?.uid || user?.id || "demo-user";
+    setLoadingHistory(true);
+    try {
+      const res = await fetch(`/api/chat/history?user_id=${encodeURIComponent(userId)}`);
+      if (res.ok) {
+        setConversations(await res.json());
+      }
+    } catch (err) {
+      console.error("Failed to load chat history:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [user?.uid]);
+
+  // Load conversations on mount
+  useEffect(() => {
+    if (user?.onboardingCompleted) loadConversations();
+  }, [user?.onboardingCompleted, loadConversations]);
+
+  // Switch to an existing conversation
+  const switchChat = useCallback(async (chatSessionId) => {
+    try {
+      const res = await fetch(`/api/chat/${chatSessionId}`);
+      if (res.ok) {
+        const session = await res.json();
+        setSessionId(session.id);
+        try { localStorage.setItem("hazela_session_id", session.id); } catch {}
+        // Convert backend messages to frontend format
+        const history = (session.messages || []).map((m) => ({
+          id: `msg-${m.role}-${Date.now()}-${Math.random()}`,
+          sender: m.role === "user" ? "user" : "agent",
+          text: m.content,
+          timestamp: m.timestamp || "",
+          isError: false,
+        }));
+        setChatHistory(history);
+      }
+    } catch (err) {
+      console.error("Failed to load conversation:", err);
+    }
+  }, []);
+
+  // Start a new chat
+  const newChat = useCallback(() => {
+    setSessionId(null);
+    setChatHistory([]);
+    setLastMessage(null);
+    setAgentState("Neutral");
+    try { localStorage.removeItem("hazela_session_id"); } catch {}
+  }, []);
 
   // ─── Profile Persistence (localStorage) ───────────────────────────────────
   // Store app-specific profile keyed by Firebase UID.
@@ -243,6 +301,8 @@ export function AppProvider({ children }) {
     setAgentState("Neutral");
     setPendingPrompt("");
     setSessionId(null);
+    setConversations([]);
+    setLastMessage(null);
 
     router.push("/");
   };
@@ -297,17 +357,28 @@ export function AppProvider({ children }) {
   // Session persistence: sessionId is stored in localStorage and reused across
   // messages so the Agent Core maintains conversational context.
 
-  const sendMessage = async (text, schemeContext = null, applicationContext = null) => {
+  const sendMessage = async (text, extraContext = null) => {
     const userMsg = {
       id: `msg-user-${Date.now()}`,
       sender: "user",
       text,
       timestamp: "Just now",
+      isError: false,
     };
     setChatHistory((prev) => [...prev, userMsg]);
     setAgentState("Attentive");
+    setLastMessage({ text, extraContext });
 
     const userId = user?.uid || user?.id || "demo-user";
+
+    // Build context with profile info + any extra context (scheme, application)
+    const context = {};
+    if (user?.state) context.state = user.state;
+    if (user?.education) context.education = user.education;
+    if (user?.category) context.category = user.category;
+    if (user?.incomeRange) context.income_range = user.incomeRange;
+    if (user?.age) context.age = user.age;
+    if (extraContext) Object.assign(context, extraContext);
 
     try {
       const res = await fetch("/api/chat", {
@@ -315,10 +386,9 @@ export function AppProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
-          schemeContext,
-          applicationContext,
-          userId,
-          sessionId,
+          user_id: userId,
+          session_id: sessionId,
+          context,
         }),
       });
 
@@ -326,62 +396,88 @@ export function AppProvider({ children }) {
         const data = await res.json();
 
         // Store session_id from backend for continuity across messages
-        if (data.sessionId) {
-          setSessionId(data.sessionId);
-          try { localStorage.setItem("hazela_session_id", data.sessionId); } catch {}
+        if (data.session_id) {
+          setSessionId(data.session_id);
+          try { localStorage.setItem("hazela_session_id", data.session_id); } catch {}
         }
 
-        setChatHistory((prev) => [...prev, data.chatMessage]);
-        const newState = data.agentState || "Neutral";
+        // Map actions for display
+        const actionsText = (data.actions || []).length > 0
+          ? "\n\nActions: " + data.actions.map((a) => a.tool_name).join(", ")
+          : "";
+        const nextSteps = (data.suggested_next_steps || []).length > 0
+          ? "\n\nNext steps:\n" + data.suggested_next_steps.map((s) => "• " + s).join("\n")
+          : "";
+
+        setChatHistory((prev) => [...prev, {
+          id: `msg-agent-${Date.now()}`,
+          sender: "agent",
+          text: data.response_text + actionsText + nextSteps,
+          timestamp: "Just now",
+          isError: false,
+        }]);
+
+        const newState = data.status_update === "action_required" ? "Confused"
+          : data.prepared_application_id ? "Excited"
+          : "Neutral";
         setAgentState(newState);
-        if (["Excited", "Confused", "Suspicious"].includes(newState)) {
+        if (["Excited", "Confused"].includes(newState)) {
           setTimeout(() => setAgentState("Neutral"), 4000);
         }
-        if (data.updatedApplications) setApplications(data.updatedApplications);
-        if (data.updatedProfile) {
-          setUser((prev) => (prev ? { ...prev, ...data.updatedProfile } : prev));
-        }
+
+        // Refresh data after agent response
+        refreshData();
+        // Refresh chat history list
+        loadConversations();
       } else {
         const errData = await res.json().catch(() => ({}));
-        setChatHistory((prev) => [
-          ...prev,
-          {
-            id: `msg-err-${Date.now()}`,
-            sender: "agent",
-            text: errData.error || "The agent encountered an issue. Please try again.",
-            timestamp: "Just now",
-            agentState: "Confused",
-          },
-        ]);
+        const rawMsg = errData.detail || errData.error || "";
+        // Sanitize error — never expose backend internals to users
+        const errorMsg = (!rawMsg || rawMsg.includes("429") || rawMsg.includes("RESOURCE_EXHAUSTED") || rawMsg.includes("quota") || rawMsg.includes("gemini") || rawMsg.includes("google") || rawMsg.includes("llm"))
+          ? "I'm getting a lot of requests right now. Please try again in a moment."
+          : rawMsg;
+        setChatHistory((prev) => [...prev, {
+          id: `msg-err-${Date.now()}`,
+          sender: "agent",
+          text: errorMsg,
+          timestamp: "Just now",
+          isError: true,
+        }]);
         setAgentState("Confused");
         setTimeout(() => setAgentState("Neutral"), 4000);
       }
     } catch (error) {
       console.error("Chat API error:", error);
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          id: `msg-err-${Date.now()}`,
-          sender: "agent",
-          text: "I encountered a network issue. Please check if the backend is running and try again.",
-          timestamp: "Just now",
-          agentState: "Confused",
-        },
-      ]);
+      setChatHistory((prev) => [...prev, {
+        id: `msg-err-${Date.now()}`,
+        sender: "agent",
+        text: "Couldn't reach the agent. Please check your connection and try again.",
+        timestamp: "Just now",
+        isError: true,
+      }]);
       setAgentState("Confused");
       setTimeout(() => setAgentState("Neutral"), 4000);
     }
   };
 
+  // Retry the last failed message
+  const retryLastMessage = useCallback(() => {
+    if (!lastMessage) return;
+    // Remove the last error message from history
+    setChatHistory((prev) => prev.filter((m) => !m.isError));
+    setLastMessage(null);
+    sendMessage(lastMessage.text, lastMessage.extraContext);
+  }, [lastMessage, sendMessage]);
+
   // ─── Explore / Applications / Documents ────────────────────────────────────
 
   const askAgentAboutScheme = (scheme) => {
-    setPendingPrompt(`Explain eligibility criteria for ${scheme.name}`);
+    setPendingPrompt({ text: `Explain eligibility criteria for ${scheme.name}`, extraContext: { scheme_id: scheme.id, scheme_name: scheme.name } });
     router.push("/chat");
   };
 
   const askAgentAboutApplication = (app) => {
-    setPendingPrompt(`Why is my application for ${app.name} showing ${app.status}?`);
+    setPendingPrompt({ text: `Why is my application for ${app.name} showing ${app.status}?`, extraContext: { application_id: app.id, application_name: app.name } });
     router.push("/chat");
   };
 
@@ -410,7 +506,7 @@ export function AppProvider({ children }) {
       const res = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ schemeId: scheme.id, name: scheme.name, userId: user?.uid || user?.id || "demo-user" }),
+        body: JSON.stringify({ scheme_id: scheme.id, user_id: user?.uid || user?.id || "demo-user" }),
       });
 
       if (res.ok) {
@@ -420,7 +516,7 @@ export function AppProvider({ children }) {
           if (index !== -1) return prev.map((a, i) => (i === index ? newApp : a));
           return [...prev, newApp];
         });
-        setPendingPrompt(`Prepare application for ${scheme.name}`);
+        setPendingPrompt({ text: `Prepare application for ${scheme.name}`, extraContext: { scheme_id: scheme.id, scheme_name: scheme.name, application_id: newApp.id } });
         router.push("/chat");
       }
     } catch (error) {
@@ -490,6 +586,7 @@ export function AppProvider({ children }) {
         logout,
         completeOnboarding,
         sendMessage,
+        retryLastMessage,
         askAgentAboutScheme,
         askAgentAboutApplication,
         prepareApplication,
@@ -501,6 +598,12 @@ export function AppProvider({ children }) {
         transitionTarget,
         triggerTransition,
         completeTransition,
+        conversations,
+        loadingHistory,
+        loadConversations,
+        switchChat,
+        newChat,
+        sessionId,
       }}
     >
       {children}
