@@ -17,9 +17,9 @@ export const metadata = {
     "Stop chasing scholarships. Iva's AI agent discovers government schemes you qualify for, prepares your application, and keeps tracking — so you don't have to.",
   keywords: ["government schemes", "scholarships", "student aid", "application agent", "India scholarships"],
    icons: {
-    icon: "/iva-logo.png",
-    shortcut: "/iva-logo.png",
-    apple: "/iva-logo.png",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
   openGraph: {
     title: "Iva — Your Government Scheme & Scholarship Agent",
