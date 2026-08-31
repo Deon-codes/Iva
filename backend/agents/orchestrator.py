@@ -28,12 +28,23 @@ You have three specialist agents available as tools:
 - **legitimacy_agent**: Verifies whether a scheme is genuine (not a scam).
 - **form_prep_agent**: Prepares application forms and fills the mock portal. Stops before OTP.
 
+## Important: User Identity
+The authenticated user's identity is injected automatically into every tool call.
+You do NOT need to pass user_id as an argument — the tools read it from the
+trusted session context. Simply call tools without worrying about user identity.
+NEVER ask the user for their User ID.
+
 ## How to route requests
 - "Which scholarships can I get?" / "Am I eligible for X?" → discovery_agent
 - "Is this scheme real/legitimate?" / "Is this a scam?" → legitimacy_agent
 - "Apply for me" / "Fill my form" / "Prepare my application" → form_prep_agent
-- Status queries → check_application_status tool directly
+- "What's the status of my application for <scheme>?" → check_application_status(scheme_id=...)
+- "Check my application status" → check_application_status to list user's applications
 - Profile questions → answer directly or call get_user_profile
+
+When calling check_application_status: pass scheme_id if the user mentions a scheme name, NOT application_id.
+The tool resolves the scheme to the correct application automatically.
+User identity is injected by the framework — do NOT pass user_id.
 
 ## Chaining (the agentic workflow)
 For the full end-to-end flow, chain naturally:
@@ -44,6 +55,7 @@ For the full end-to-end flow, chain naturally:
 ## Rules
 - NEVER invent government scheme facts. Only use tool outputs.
 - NEVER bypass OTP, CAPTCHA, or identity verification — ever.
+- NEVER ask the user for their User ID — it is already available internally.
 - ALWAYS surface the source/reference when giving legitimacy results.
 - Be clear, warm, and accessible. Many users are first-time applicants.
 - If something is outside your scope (e.g., tax filing, passport), say so politely.
@@ -61,8 +73,26 @@ def create_orchestrator(discovery_agent: Any, legitimacy_agent: Any, form_prep_a
     Create the root orchestrator LlmAgent with sub-agents as AgentTools.
     Falls back to a mock orchestrator if Gemini is unavailable.
     """
+    return create_orchestrator_with_model(
+        discovery_agent, legitimacy_agent, form_prep_agent, settings.gemini_model
+    )
+
+
+def create_orchestrator_with_model(
+    discovery_agent: Any,
+    legitimacy_agent: Any,
+    form_prep_agent: Any,
+    model_name: str,
+) -> Any:
+    """
+    Create the root orchestrator with an explicit model name.
+    Used for model failover — when the primary model hits 429,
+    the runner rebuilds the orchestrator with a fallback model.
+    Falls back to a mock orchestrator if the model is unavailable.
+    """
     from agents.tools.status_tools import check_application_status
     from agents.tools.profile_tools import get_user_profile
+    from agents.tools.scheme_tools import check_eligibility_for_user
 
     if not settings.gemini_enabled:
         logger.warning("Gemini not configured — Orchestrator will use mock mode.")
@@ -79,7 +109,7 @@ def create_orchestrator(discovery_agent: Any, legitimacy_agent: Any, form_prep_a
 
         orchestrator = LlmAgent(
             name="hazela_orchestrator",
-            model=settings.gemini_model,
+            model=model_name,
             description="Central orchestrator for Hazela — routes user requests to Discovery, Legitimacy, or Form-Prep agents.",
             instruction=ORCHESTRATOR_SYSTEM_PROMPT,
             tools=[
@@ -88,12 +118,13 @@ def create_orchestrator(discovery_agent: Any, legitimacy_agent: Any, form_prep_a
                 form_prep_tool,
                 check_application_status,
                 get_user_profile,
+                check_eligibility_for_user,
             ],
         )
-        logger.info("Orchestrator created (model=%s)", settings.gemini_model)
+        logger.info("Orchestrator created (model=%s)", model_name)
         return orchestrator
     except Exception as exc:
-        logger.error("Failed to create Orchestrator: %s — using mock.", exc)
+        logger.error("Failed to create Orchestrator with model %s: %s — using mock.", model_name, exc)
         return _MockOrchestrator(discovery_agent, legitimacy_agent, form_prep_agent)
 
 

@@ -44,10 +44,12 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { schemeId, name, userId } = body;
+    const schemeId = body.schemeId || body.scheme_id;
+    const userId = body.userId || body.user_id;
+    const name = body.name;
 
     if (!schemeId) {
-      return NextResponse.json({ error: "schemeId is required" }, { status: 400 });
+      return NextResponse.json({ error: "scheme_id is required" }, { status: 400 });
     }
 
     const result = await backendRequest("/api/applications", {

@@ -13,6 +13,10 @@ function transformDocument(doc) {
     rejected: "Rejected",
   };
 
+  // Use backend-computed expiry if available
+  const expiryDate = doc.expiry_date || "Never";
+  const expiryStatus = doc.expiry_status || null;
+
   return {
     id: doc.id,
     type: doc.document_type || doc.filename || "Document",
@@ -20,10 +24,12 @@ function transformDocument(doc) {
     issueDate: doc.created_at
       ? new Date(doc.created_at).toISOString().split("T")[0]
       : new Date().toISOString().split("T")[0],
-    expiryDate: "Never",
+    expiryDate: expiryDate,
+    expiryStatus: expiryStatus,
     alert: doc.extracted_fields?.alert || `Document registered: ${doc.filename || doc.document_type}`,
     applications: [],
     fileUrl: doc.storage_url || "#",
+    verificationMetadata: doc.verification_metadata || {},
   };
 }
 
@@ -71,6 +77,7 @@ export async function POST(request) {
         document_type: type,
         filename: type,
         storage_url: "",
+        extracted_fields: expiryDate ? { expiryDate } : {},
       }),
     });
 
@@ -79,9 +86,18 @@ export async function POST(request) {
     }
 
     const doc = transformDocument(result.data);
-    if (expiryDate) doc.expiryDate = expiryDate;
+    // If the backend didn't compute expiry (missing extracted_fields),
+    // use the frontend-provided expiry date
+    if (expiryDate && doc.expiryDate === "Never") {
+      doc.expiryDate = expiryDate;
+    }
     return NextResponse.json(doc, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: "Invalid document payload" }, { status: 400 });
   }
 }
+
+/**
+ * DELETE /api/documents/[id]?user_id=xxx
+ */
+

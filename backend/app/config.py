@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     # ── Gemini ────────────────────────────────────────────────────────────────
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.6-flash"
+    gemini_fallback_models: str = "gemini-3.1-flash-lite,gemini-3.5-flash-lite"
+
+    # ── Grok / xAI (external fallback) ────────────────────────────────────────
+    xai_api_key: str = ""
+    grok_model: str = "grok-3-mini"
+    enable_grok_fallback: bool = False
 
     # ── Google Cloud / Firestore ───────────────────────────────────────────────
     google_cloud_project: str = ""
@@ -50,6 +56,9 @@ class Settings(BaseSettings):
 
     # ── Pub/Sub ───────────────────────────────────────────────────────────────
     pubsub_topic: str = "hazela-status-check"
+
+    # ── Data.gov.in ────────────────────────────────────────────────────────────
+    data_gov_api_key: str = ""
 
     # ── CORS ──────────────────────────────────────────────────────────────────
     allowed_origins: str = "*"
@@ -90,6 +99,25 @@ class Settings(BaseSettings):
     @property
     def pubsub_enabled(self) -> bool:
         return bool(self.google_cloud_project and self.pubsub_topic)
+
+    @property
+    def grok_enabled(self) -> bool:
+        enabled = bool(self.xai_api_key and self.enable_grok_fallback)
+        if not enabled and self.enable_grok_fallback:
+            logger.warning(
+                "XAI_API_KEY not set — Grok fallback disabled. "
+                "Set XAI_API_KEY and ENABLE_GROK_FALLBACK=true in .env to enable."
+            )
+        return enabled
+
+    @property
+    def gemini_fallback_list(self) -> list:
+        """Parse comma-separated fallback models into a list."""
+        return [m.strip() for m in self.gemini_fallback_models.split(",") if m.strip()]
+
+    @property
+    def datagov_enabled(self) -> bool:
+        return bool(self.data_gov_api_key)
 
 
 # Singleton — import this everywhere

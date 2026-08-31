@@ -42,6 +42,9 @@ class DocumentCreate(BaseModel):
     document_type: str
     filename: str
     storage_url: str = ""
+    extracted_fields: Dict[str, Any] = Field(default_factory=dict)
+    status: Optional[str] = None  # "verified", "pending_verification", etc.
+    demo_seeded: bool = False  # True for demo-scenario-managed documents
 
 
 class DocumentMetaSummary(BaseModel):

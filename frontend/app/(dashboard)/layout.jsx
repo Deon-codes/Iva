@@ -4,13 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useApp } from "../context/AppContext";
 import { useRouter, usePathname } from "next/navigation";
-import { MessageCircle, Search, ClipboardList, FileText, X, Bell, ChevronDown, Target, AlertTriangle, Clock, Plus, MessageSquare } from "lucide-react";
+import { MessageCircle, Search, ClipboardList, FileText, X, Bell, ChevronDown, Target, AlertTriangle, Clock, Plus, MessageSquare, User } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/chat",         label: "Chat",         icon: <MessageCircle size={18} />, desc: "Agent workspace" },
   { href: "/explore",      label: "Explore",      icon: <Search size={18} />, desc: "Browse schemes" },
   { href: "/applications", label: "Applications", icon: <ClipboardList size={18} />, desc: "Track progress" },
   { href: "/documents",    label: "Documents",    icon: <FileText size={18} />, desc: "Manage docs" },
+  { href: "/profile",      label: "Profile",      icon: <User size={18} />, desc: "Edit profile" },
 ];
 
 export default function DashboardLayout({ children }) {

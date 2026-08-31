@@ -6,7 +6,7 @@ import { backendRequest } from "../../lib/client";
  * Retrieve a full conversation by session ID from the backend.
  */
 export async function GET(request, { params }) {
-  const { session_id } = params;
+  const { session_id } = await params;
 
   if (!session_id) {
     return NextResponse.json({ error: "session_id is required" }, { status: 400 });

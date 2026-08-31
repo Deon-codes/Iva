@@ -1,56 +1,110 @@
 """
-Status tools — the handoff point between Person 1 (agent-core) and Person 4 (status-documents).
+Status tools — check application status by application_id or scheme_id.
 
-Person 1 exposes: check_application_status(application_id)
-Person 4 owns:    the scheduler / Pub/Sub wiring that calls this trigger.
+Supports two resolution paths:
+  1. Direct: application_id provided → look up directly
+  2. By scheme: scheme_id provided → find user's application for that scheme
 
-The trigger also publishes a Pub/Sub message so Person 4's async status-agent
-can run its deeper portal-scraping / status-parsing logic.
+User identity is injected via ADK ToolContext (tool_context.user_id).
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from app.services import firestore_service as fs
 from app.services.pubsub_service import publish_status_check_trigger
 
+try:
+    from google.adk.tools.tool_context import ToolContext as _ToolContext
+except ImportError:
+    _ToolContext = None  # type: ignore[misc,assignment]
+
 logger = logging.getLogger(__name__)
 
+_Tc = _ToolContext if _ToolContext is not None else Any
 
-async def check_application_status(application_id: str) -> Dict[str, Any]:
+
+def _get_uid(tool_context: Any = None, user_id: str = "") -> str:
+    """Get user_id from ADK ToolContext (trusted) or fallback."""
+    if tool_context is not None and getattr(tool_context, "user_id", None):
+        return tool_context.user_id
+    return user_id
+
+
+async def check_application_status(
+    application_id: str = "",
+    scheme_id: str = "",
+    user_id: str = "",
+    tool_context: _Tc = None,  # type: ignore[valid-type]
+) -> Dict[str, Any]:
     """
     Check and return the current status of an application.
-    Also publishes a Pub/Sub trigger for Person 4's async status agent.
 
-    This is the exact handoff point defined in AGENTS.md:
-    Person 4 subscribes to the Pub/Sub topic to run deeper status checks.
+    Supports two modes:
+      - application_id: direct lookup (legacy)
+      - scheme_id: resolves the user's application for that scheme
+
+    The user identity is automatically injected by the ADK framework.
+    You do NOT need to pass user_id explicitly.
 
     Args:
-        application_id: The unique application identifier.
+        application_id: The application identifier (if known).
+        scheme_id: The scheme identifier (to find user's application).
 
     Returns:
-        Dict with:
-            - application_id (str)
-            - status (str) — current status value
-            - nextAction (str | None) — what the user should do next
-            - rejectionReason (str | None)
-            - pubsub_triggered (bool) — whether the async check was also triggered
+        Dict with application_id, status, nextAction, etc.
     """
-    application = await fs.get_application(application_id)
+    uid = _get_uid(tool_context, user_id)
+    resolved_app_id = application_id
+
+    # If no application_id but scheme_id is provided, resolve via user's applications
+    if not resolved_app_id and scheme_id and uid:
+        apps = await fs.list_applications_for_user(uid)
+        matching = [a for a in apps if a.get("schemeId") == scheme_id]
+        if matching:
+            resolved_app_id = matching[0].get("id", "")
+        else:
+            return {
+                "found": False,
+                "scheme_id": scheme_id,
+                "message": (
+                    f"No application has been prepared for this scheme yet. "
+                    f"Would you like me to prepare one?"
+                ),
+            }
+
+    if not resolved_app_id:
+        return {
+            "found": False,
+            "message": "Please specify which application you want to check, or provide the scheme name.",
+        }
+
+    application = await fs.get_application(resolved_app_id)
     if application is None:
         return {
-            "application_id": application_id,
+            "found": False,
+            "application_id": resolved_app_id,
             "error": "Application not found.",
             "pubsub_triggered": False,
         }
 
-    # Publish async trigger for Person 4's status agent
-    pubsub_triggered = await publish_status_check_trigger(application_id)
+    # Verify user ownership
+    if uid and application.get("userId") != uid:
+        return {
+            "found": False,
+            "error": "You do not have access to this application.",
+        }
+
+    # Publish async trigger for deeper status checks
+    pubsub_triggered = await publish_status_check_trigger(resolved_app_id)
 
     return {
-        "application_id": application_id,
+        "found": True,
+        "application_id": resolved_app_id,
+        "scheme_id": application.get("schemeId"),
+        "scheme_name": application.get("schemeName"),
         "status": application.get("status"),
         "nextAction": application.get("nextAction"),
         "rejectionReason": application.get("rejectionReason"),

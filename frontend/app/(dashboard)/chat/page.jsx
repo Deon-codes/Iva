@@ -347,6 +347,11 @@ export default function ChatPage() {
               <div key={scheme.id} style={{ padding: "0.75rem 0", borderBottom: `1px solid ${C.borderLight}` }} className="trending-item">
                 <div style={{ fontSize: "0.8125rem", fontWeight: 600, color: C.text, lineHeight: 1.4 }}>{scheme.name}</div>
                 <div style={{ fontSize: "0.68rem", color: C.dim, marginTop: 3 }}>{scheme.department}</div>
+                {scheme.eligibility_status && (
+                  <span style={{ display: "inline-block", fontSize: "0.58rem", fontWeight: 700, padding: "1px 6px", borderRadius: 9999, marginTop: 4, background: scheme.eligibility_status === "eligible" ? C.green50 : scheme.eligibility_status === "insufficient_information" ? "#FFF8E1" : "#FFEBEE", color: scheme.eligibility_status === "eligible" ? C.green700 : scheme.eligibility_status === "insufficient_information" ? "#E08E00" : "#C62828" }}>
+                  {scheme.eligibility_status === "eligible" ? "Match" : scheme.eligibility_status === "insufficient_information" ? "Needs info" : "Not eligible"}
+                </span>
+                )}
                 {scheme.deadline && (
                   <div style={{ fontSize: "0.65rem", color: C.green700, marginTop: 3, fontWeight: 600 }}>
                     Deadline: {new Date(scheme.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}

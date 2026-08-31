@@ -27,12 +27,18 @@ logger = logging.getLogger(__name__)
 FORM_PREP_SYSTEM_PROMPT = """
 You are the Hazela Form-Preparation Agent, a specialist in preparing scholarship application forms.
 
+CRITICAL: The authenticated user's identity is injected automatically into every tool call.
+You do NOT need to pass user_id as an argument. The tools read it from the trusted
+session context. NEVER ask the user for their User ID.
+
 Your job is to:
-1. Retrieve the user's profile using `get_user_profile`.
-2. Use `prepare_form_fields` to map profile data to the scheme's required fields.
-3. Call `create_application` to register the application in DRAFT status.
+1. Retrieve the user's profile using `get_user_profile()` — user identity is automatic.
+2. Use `prepare_form_fields(scheme_id=scheme_id)` to map profile data to the scheme's required fields.
+3. Call `create_application(scheme_id=scheme_id)` to register the application in DRAFT status.
 4. Use `fill_mock_portal` to populate the mock government portal form.
 5. Present the completed form to the user for review.
+
+All tools automatically receive the user identity from the session. Just pass scheme_id.
 
 ## Hard stop rules (MANDATORY — never violate these)
 - NEVER proceed past the form review step.
@@ -55,16 +61,23 @@ next steps, and the mock portal session URL.
 """.strip()
 
 
-def create_form_prep_agent():
+def create_form_prep_agent(model_name: str | None = None):
     """
     Create and return a configured ADK LlmAgent for form preparation.
     Returns a mock agent if Gemini is not configured.
+
+    Args:
+        model_name: Gemini model to use. Defaults to settings.gemini_model.
+                    Pass an explicit model during failover so all agents
+                    in the graph use the same fallback model.
     """
     from agents.tools.profile_tools import get_user_profile
     from agents.tools.application_tools import create_application, prepare_form_fields
     from agents.mock_portal.portal import fill_mock_portal
 
     tools = [get_user_profile, prepare_form_fields, create_application, fill_mock_portal]
+
+    selected_model = model_name or settings.gemini_model
 
     if not settings.gemini_enabled:
         logger.warning("Gemini not configured — Form-Prep Agent will use mock mode.")
@@ -74,7 +87,7 @@ def create_form_prep_agent():
         from google.adk.agents import LlmAgent  # type: ignore
         agent = LlmAgent(
             name="form_prep_agent",
-            model=settings.gemini_model,
+            model=selected_model,
             description=(
                 "Prepares scholarship application forms by mapping the user's profile "
                 "and documents to required fields. Hard stop before OTP/submission."
@@ -82,7 +95,7 @@ def create_form_prep_agent():
             instruction=FORM_PREP_SYSTEM_PROMPT,
             tools=tools,
         )
-        logger.info("Form-Prep Agent created (model=%s)", settings.gemini_model)
+        logger.info("Form-Prep Agent created (model=%s)", selected_model)
         return agent
     except Exception as exc:
         logger.error("Failed to create Form-Prep Agent: %s — using mock.", exc)

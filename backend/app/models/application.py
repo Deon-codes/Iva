@@ -26,6 +26,7 @@ class ApplicationStatus(str, Enum):
     """State machine values — see docs/architecture.md for the diagram."""
 
     DRAFT = "draft"
+    READY_FOR_REVIEW = "ready_for_review"
     SUBMITTED = "submitted"
     UNDER_REVIEW = "under_review"
     ACTION_REQUIRED = "action_required"

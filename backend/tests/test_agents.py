@@ -152,7 +152,7 @@ async def test_legitimacy_scheme_in_registry():
 async def test_legitimacy_unknown_scheme_warning():
     from agents.tools.legitimacy_tools import check_scheme_in_registry
 
-    result = await check_scheme_in_registry("Random Fake Scholarship 2026")
+    result = await check_scheme_in_registry("Qwerty Plugh Widget Rebate 2026")
     assert result["in_registry"] is False
     assert result["verdict"] == "warning"
 
@@ -184,8 +184,11 @@ async def test_prepare_form_fields_with_complete_profile(sample_user):
     result = await prepare_form_fields(sample_user["id"], "scheme_aicte_pragati")
 
     assert "form_fields" in result
-    assert result["form_fields"]["applicant_name"] == "Priya Sharma"
-    assert result["form_fields"]["state_of_domicile"] == "Maharashtra"
+    # Fields now have {value, source, verified} structure
+    name_field = result["form_fields"]["applicant_name"]
+    assert name_field["value"] == "Priya Sharma" if isinstance(name_field, dict) else name_field == "Priya Sharma"
+    state_field = result["form_fields"]["state_of_domicile"]
+    assert state_field["value"] == "Maharashtra" if isinstance(state_field, dict) else state_field == "Maharashtra"
     assert "required_documents" in result
 
 

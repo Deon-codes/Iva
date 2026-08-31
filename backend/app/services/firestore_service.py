@@ -53,6 +53,10 @@ class _InMemoryStore:
 
 _stub = _InMemoryStore()
 
+# ── Ingestion metadata ────────────────────────────────────────────────────────
+_last_ingestion_timestamp: Optional[str] = None
+_last_ingestion_summary: Optional[Dict[str, Any]] = None
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Firestore client factory
@@ -131,6 +135,51 @@ async def upsert_scheme(scheme_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         return data
     await client.collection("schemes").document(scheme_id).set(data, merge=True)
     return data
+
+
+async def search_schemes(
+    query: Optional[str] = None,
+    state: Optional[str] = None,
+    category: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Search schemes with optional keyword/state/category filters.
+    Works against both Firestore and in-memory stub.
+    """
+    all_schemes = await list_schemes()
+
+    results = all_schemes
+
+    if query:
+        keywords = [kw.lower() for kw in query.split() if len(kw) > 2]
+        if keywords:
+            filtered = []
+            for s in results:
+                searchable = " ".join([
+                    s.get("name", ""),
+                    s.get("description", ""),
+                    s.get("department", ""),
+                    s.get("eligibility", {}).get("description", "") if isinstance(s.get("eligibility"), dict) else "",
+                    s.get("category", "") or "",
+                    s.get("state") or "",
+                ]).lower()
+                if any(kw in searchable for kw in keywords):
+                    filtered.append(s)
+            results = filtered
+
+    if state:
+        results = [
+            s for s in results
+            if s.get("state") is None or (s.get("state") or "").lower() == state.lower()
+        ]
+
+    if category:
+        results = [
+            s for s in results
+            if (s.get("category") or "").lower() == category.lower()
+        ]
+
+    return results
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -279,6 +328,23 @@ async def list_documents_for_user(user_id: str) -> List[Dict[str, Any]]:
     return [doc.to_dict() async for doc in docs]
 
 
+async def delete_document(document_id: str) -> bool:
+    """Delete a document by ID. Returns True if deleted."""
+    client = _get_client()
+    if client is None:
+        existing = _stub.get("documents", document_id)
+        if existing is None:
+            return False
+        _stub.delete("documents", document_id)
+        return True
+    ref = client.collection("documents").document(document_id)
+    doc = await ref.get()
+    if not doc.exists:
+        return False
+    await ref.delete()
+    return True
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Chat Sessions (in-memory persistence for dev)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -352,6 +418,25 @@ async def list_chat_sessions_for_user(user_id: str) -> List[Dict[str, Any]]:
     sessions = [doc.to_dict() async for doc in docs]
     sessions.sort(key=lambda s: s.get("updated_at", ""), reverse=True)
     return sessions
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Ingestion Metadata
+# ─────────────────────────────────────────────────────────────────────────────
+
+def record_ingestion(summary: Dict[str, Any]) -> None:
+    """Record the result of an ingestion run for the /meta endpoint."""
+    global _last_ingestion_timestamp, _last_ingestion_summary
+    _last_ingestion_timestamp = summary.get("timestamp")
+    _last_ingestion_summary = summary
+
+
+def get_ingestion_metadata() -> Dict[str, Any]:
+    """Return the last ingestion timestamp and summary."""
+    return {
+        "last_updated": _last_ingestion_timestamp,
+        "summary": _last_ingestion_summary,
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────

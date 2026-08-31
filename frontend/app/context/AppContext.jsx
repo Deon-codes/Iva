@@ -87,13 +87,24 @@ export function AppProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
+  // ─── Sync profile to backend on auth state change ───────────────────────
+  // When the user object changes (login, demo, Firebase), ensure the backend
+  // has the profile data so Agent tools can access it.
+  useEffect(() => {
+    if (user?.uid && user?.onboardingCompleted) {
+      syncProfileToBackend(user.uid, user);
+      // Seed demo profile for fresh accounts (first login)
+      seedDemoProfile(user.uid);
+    }
+  }, [user?.uid, user?.onboardingCompleted]);
+
   // Fetch data when user is authenticated and onboarding is complete
   const refreshData = useCallback(async () => {
     const userId = user?.uid || user?.id || "demo-user";
     try {
       const [profileRes, schemesRes, appsRes, docsRes] = await Promise.all([
         fetch(`/api/profile?user_id=${encodeURIComponent(userId)}`),
-        fetch("/api/schemes"),
+        fetch(`/api/schemes?user_id=${encodeURIComponent(userId)}`),
         fetch(`/api/applications?user_id=${encodeURIComponent(userId)}`),
         fetch(`/api/documents?user_id=${encodeURIComponent(userId)}`),
       ]);
@@ -197,6 +208,31 @@ export function AppProvider({ children }) {
       // ignore
     }
   }
+
+  /**
+   * Sync the current user profile to the backend.
+   * This ensures the backend has the profile data so Agent tools
+   * (prepare_form_fields, get_user_profile, etc.) can access it.
+   * The frontend API route /api/profile handles field-name mapping.
+   */
+  async function syncProfileToBackend(uid, profile) {
+    if (!uid || !profile?.onboardingCompleted) return;
+    try {
+      // POST to frontend proxy — it maps frontend fields to backend shape
+      await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...profile, user_id: uid, onboardingCompleted: true }),
+      });
+    } catch (err) {
+      // Non-critical — profile sync is best-effort
+      console.error("Profile sync to backend failed:", err);
+    }
+  }
+
+  // Demo document seeding is now handled by the backend demo scenario endpoint.
+  // Call POST /api/demo/scenario?user_id=xxx with { scenario: "fully_verified" }
+  // to seed verified demo documents. No client-side seeding needed.
 
   // ─── Auth Operations ──────────────────────────────────────────────────────
 
@@ -311,17 +347,19 @@ export function AppProvider({ children }) {
    * Complete onboarding: save profile, mark as completed.
    */
   const completeOnboarding = async (profileData) => {
+    const uid = user?.uid || user?.id || "demo-user";
     try {
       const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profileData, user_id: user?.uid || user?.id || "demo-user", onboardingCompleted: true }),
+        body: JSON.stringify({ ...profileData, user_id: uid, onboardingCompleted: true }),
       });
 
       const updatedProfile = res.ok ? await res.json() : profileData;
 
-      // Merge and persist
+      // Merge and persist locally (keep frontend field names for UI)
     const fullProfile = {
+      ...profileData,
       ...updatedProfile,
       onboardingCompleted: true,
     };
@@ -335,12 +373,11 @@ export function AppProvider({ children }) {
   } catch (error) {
     console.error("Onboarding API error:", error);
     // Still mark onboarded locally so user isn't stuck
-    // Also save profile to backend for future reference
     try {
       await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profileData, user_id: user?.uid || user?.id || "demo-user" }),
+        body: JSON.stringify({ ...profileData, user_id: uid, onboardingCompleted: true }),
       });
     } catch {}
     if (user?.uid) {
@@ -502,34 +539,43 @@ export function AppProvider({ children }) {
   };
 
   const prepareApplication = async (scheme) => {
-    try {
-      const res = await fetch("/api/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scheme_id: scheme.id, user_id: user?.uid || user?.id || "demo-user" }),
-      });
-
-      if (res.ok) {
-        const newApp = await res.json();
-        setApplications((prev) => {
-          const index = prev.findIndex((a) => a.id === newApp.id);
-          if (index !== -1) return prev.map((a, i) => (i === index ? newApp : a));
-          return [...prev, newApp];
-        });
-        setPendingPrompt({ text: `Prepare application for ${scheme.name}`, extraContext: { scheme_id: scheme.id, scheme_name: scheme.name, application_id: newApp.id } });
-        router.push("/chat");
-      }
-    } catch (error) {
-      console.error("Error creating application:", error);
-    }
+    // Route through the Agent — the Agent decides to invoke prepare_form_fields
+    // and create_application via the form_prep_agent sub-agent.
+    // Include scheme_id in the message text so the Agent can extract it,
+    // since context propagation through ADK may not reach sub-agents.
+    setPendingPrompt({
+      text: `Prepare my application for ${scheme.name} (scheme_id: ${scheme.id}).`,
+      extraContext: { scheme_id: scheme.id, scheme_name: scheme.name },
+    });
+    router.push("/chat");
   };
 
   const uploadDocument = async (docType, expiryDate) => {
+    const uid = user?.uid || user?.id || "demo-user";
+    // Map display name to document_type key
+    const typeMap = {
+      "Income Certificate (FY 2026-27)": "income_certificate",
+      "Caste Certificate": "caste_certificate",
+      "Domicile Certificate": "domicile_certificate",
+      "Class 12 Passing Certificate": "marksheet",
+      "Aadhaar Card": "aadhaar",
+      "Bank Passbook": "bank_passbook",
+      "Admission Letter": "admission_letter",
+      "Marksheet": "marksheet",
+      "Disability Certificate": "disability_certificate",
+    };
+    const docTypeKey = typeMap[docType] || docType.toLowerCase().replace(/[^a-z_]/g, "");
     try {
       const res = await fetch("/api/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: docType, expiryDate, userId: user?.uid || user?.id || "demo-user" }),
+        body: JSON.stringify({
+          document_type: docTypeKey,
+          user_id: uid,
+          filename: `${docTypeKey}.pdf`,
+          status: "verified",
+          extracted_fields: expiryDate ? { expiryDate } : {},
+        }),
       });
       if (res.ok) {
         const newDoc = await res.json();
@@ -568,6 +614,108 @@ export function AppProvider({ children }) {
     setTransitionTarget(null);
   };
 
+  // ─── Profile Editing ─────────────────────────────────────────────────────
+  // ─── Document Deletion ────────────────────────────────────────────────
+  const deleteDocument = async (docId) => {
+    const uid = user?.uid || user?.id || "demo-user";
+    try {
+      const res = await fetch(`/api/documents/${docId}?user_id=${encodeURIComponent(uid)}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setDocuments((prev) => prev.filter((d) => d.id !== docId));
+        return { success: true };
+      }
+    } catch (error) {
+      console.error("Document delete error:", error);
+    }
+    return { success: false };
+  };
+
+  // ─── Demo Scenario ───────────────────────────────────────────────────
+  const setDemoScenario = async (scenario) => {
+    const uid = user?.uid || user?.id || "demo-user";
+    try {
+      const res = await fetch(`/api/demo/scenario?user_id=${encodeURIComponent(uid)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenario }),
+      });
+      if (res.ok) {
+        // Refresh documents and applications after scenario switch
+        await refreshData();
+      }
+    } catch { /* ignore */ }
+  };
+
+  // ─── Demo Profile Seeding ────────────────────────────────────────────
+  // On first login, seed a realistic demo profile so the demo works immediately.
+  async function seedDemoProfile(uid) {
+    try {
+      const res = await fetch(`/api/profile?user_id=${encodeURIComponent(uid)}`);
+      if (res.ok) {
+        const profile = await res.json();
+        // If profile has no name/education, it's likely a fresh account — seed it
+        if (!profile.name && !profile.education_level) {
+          await fetch("/api/profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: uid,
+              name: "Demo User",
+              email: "demo@hazela.app",
+              state: "Maharashtra",
+              age: 22,
+              annual_income_inr: 500000,
+              education_level: "Undergraduate",
+              caste_category: "OBC",
+              gender: "Male",
+              institution_name: "Fr. Conceicao Rodrigues College of Engineering",
+              course_name: "B.Tech Computer Engineering",
+            }),
+          });
+          // Also seed fully_verified scenario documents
+          await fetch(`/api/demo/scenario?user_id=${encodeURIComponent(uid)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ scenario: "fully_verified" }),
+          });
+        }
+      }
+    } catch { /* best effort */ }
+  }
+
+  const updateUserProfile = async (updates) => {
+    const uid = user?.uid || user?.id || "demo-user";
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...updates, user_id: uid }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        // Merge with frontend field names
+        const merged = {
+          ...user,
+          ...updates,
+          name: updated.name || user?.name,
+          state: updated.state || user?.state,
+          education: updated.education_level || user?.education,
+          category: updated.caste_category || user?.category,
+          age: updated.age ? String(updated.age) : user?.age,
+          gender: updated.gender || user?.gender,
+        };
+        setUser(merged);
+        if (uid) saveStoredProfile(uid, merged);
+        return { success: true };
+      }
+    } catch (err) {
+      console.error("Profile update error:", err);
+    }
+    return { success: false };
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -592,6 +740,9 @@ export function AppProvider({ children }) {
         prepareApplication,
         updateApplication,
         uploadDocument,
+        deleteDocument,
+        setDemoScenario,
+        updateUserProfile,
         setAgentState,
         refreshData,
         isTransitioning,

@@ -26,6 +26,7 @@ def reset_firestore_stub():
         "documents": {},
         "applications": {},
         "application_events": {},
+        "chat_sessions": {},
     }
     yield
 

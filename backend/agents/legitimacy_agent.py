@@ -43,14 +43,25 @@ Explain this to the user as if they are a first-time internet user applying for 
 """.strip()
 
 
-def create_legitimacy_agent():
+def create_legitimacy_agent(model_name: str | None = None):
     """
     Create and return a configured ADK LlmAgent for legitimacy checking.
     Returns a mock agent if Gemini is not configured.
-    """
-    from agents.tools.legitimacy_tools import apply_legitimacy_rules, check_domain_legitimacy, check_scheme_in_registry
 
-    tools = [apply_legitimacy_rules, check_domain_legitimacy, check_scheme_in_registry]
+    Args:
+        model_name: Gemini model to use. Defaults to settings.gemini_model.
+                    Pass an explicit model during failover so all agents
+                    in the graph use the same fallback model.
+    """
+    from agents.tools.legitimacy_tools import (
+        apply_legitimacy_rules, check_domain_legitimacy, check_scheme_in_registry,
+        verify_scheme_provenance, verify_user_url,
+    )
+
+    tools = [apply_legitimacy_rules, check_domain_legitimacy, check_scheme_in_registry,
+             verify_scheme_provenance, verify_user_url]
+
+    selected_model = model_name or settings.gemini_model
 
     if not settings.gemini_enabled:
         logger.warning("Gemini not configured — Legitimacy Agent will use mock mode.")
@@ -60,7 +71,7 @@ def create_legitimacy_agent():
         from google.adk.agents import LlmAgent  # type: ignore
         agent = LlmAgent(
             name="legitimacy_agent",
-            model=settings.gemini_model,
+            model=selected_model,
             description=(
                 "Verifies whether a government scheme is legitimate using deterministic rules "
                 "(domain check, fee check, registry check). Gemini explains; rules decide."
@@ -68,7 +79,7 @@ def create_legitimacy_agent():
             instruction=LEGITIMACY_SYSTEM_PROMPT,
             tools=tools,
         )
-        logger.info("Legitimacy Agent created (model=%s)", settings.gemini_model)
+        logger.info("Legitimacy Agent created (model=%s)", selected_model)
         return agent
     except Exception as exc:
         logger.error("Failed to create Legitimacy Agent: %s — using mock.", exc)

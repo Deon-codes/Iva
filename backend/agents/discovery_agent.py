@@ -46,16 +46,23 @@ You do NOT prepare or submit forms (that is the Form-Preparation Agent's job).
 """.strip()
 
 
-def create_discovery_agent():
+def create_discovery_agent(model_name: str | None = None):
     """
     Create and return a configured ADK LlmAgent for scheme discovery.
     Returns a mock agent if Gemini is not configured.
+
+    Args:
+        model_name: Gemini model to use. Defaults to settings.gemini_model.
+                    Pass an explicit model during failover so all agents
+                    in the graph use the same fallback model.
     """
     from agents.tools.scheme_tools import search_schemes, get_scheme_details, check_eligibility
     from agents.tools.profile_tools import get_user_profile, get_profile_completeness
 
     tools = [search_schemes, get_scheme_details, check_eligibility,
              get_user_profile, get_profile_completeness]
+
+    selected_model = model_name or settings.gemini_model
 
     if not settings.gemini_enabled:
         logger.warning("Gemini not configured — Discovery Agent will use mock mode.")
@@ -65,7 +72,7 @@ def create_discovery_agent():
         from google.adk.agents import LlmAgent  # type: ignore
         agent = LlmAgent(
             name="discovery_agent",
-            model=settings.gemini_model,
+            model=selected_model,
             description=(
                 "Discovers government schemes and scholarships the user is eligible for, "
                 "based on their profile. Performs deterministic eligibility checks."
@@ -73,7 +80,7 @@ def create_discovery_agent():
             instruction=DISCOVERY_SYSTEM_PROMPT,
             tools=tools,
         )
-        logger.info("Discovery Agent created (model=%s)", settings.gemini_model)
+        logger.info("Discovery Agent created (model=%s)", selected_model)
         return agent
     except Exception as exc:
         logger.error("Failed to create Discovery Agent: %s — using mock.", exc)

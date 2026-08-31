@@ -1,8 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useApp } from "../../context/AppContext";
-import { X } from "lucide-react";
+import { X, RefreshCw, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 
 const C = {
   bg: "#E8F5E9",
@@ -31,11 +31,72 @@ const FILTER_OPTIONS = [
   { id: "closing", label: "Closing Soon" },
 ];
 
+// 30-day threshold for "closing soon"
+const CLOSING_SOON_DAYS = 30;
+
 export default function ExplorePage() {
   const { schemes, user, askAgentAboutScheme, prepareApplication, applications } = useApp();
   const [selectedScheme, setSelectedScheme] = useState(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+
+  // Refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [refreshError, setRefreshError] = useState(null);
+
+  // Fetch metadata on mount
+  useEffect(() => {
+    fetchMeta();
+  }, []);
+
+  const fetchMeta = useCallback(async () => {
+    try {
+      const res = await fetch("/api/schemes/meta");
+      if (res.ok) {
+        const data = await res.json();
+        setLastUpdated(data.last_updated);
+      }
+    } catch {
+      // Non-critical
+    }
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    setRefreshError(null);
+    try {
+      const res = await fetch("/api/schemes/refresh", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setLastUpdated(data.last_updated);
+        // Trigger data reload by calling refreshData from AppContext if available
+        window.location.reload();
+      } else {
+        setRefreshError("Couldn't refresh right now. Showing the last available data.");
+      }
+    } catch {
+      setRefreshError("Couldn't refresh right now. Showing the last available data.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  const formatLastUpdated = (ts) => {
+    if (!ts) return "Not yet synced";
+    try {
+      const d = new Date(ts);
+      const now = new Date();
+      const diffMin = Math.floor((now - d) / 60000);
+      if (diffMin < 1) return "Just now";
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHrs = Math.floor(diffMin / 60);
+      if (diffHrs < 24) return `${diffHrs}h ago`;
+      return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "Unknown";
+    }
+  };
 
   const pendingCount = applications.filter((a) =>
     ["Action Required", "Preparing Application"].includes(a.status)
@@ -47,10 +108,25 @@ export default function ExplorePage() {
       !q ||
       scheme.name.toLowerCase().includes(q) ||
       scheme.department.toLowerCase().includes(q);
-    const matchesFilter =
-      filter === "all" ||
-      (filter === "verified" && scheme.legitimacyStatus?.includes("Legitimate")) ||
-      (filter === "closing" && new Date(scheme.deadline) < new Date(Date.now() + 30 * 86400000));
+
+    let matchesFilter = true;
+    if (filter === "verified") {
+      // Use real backend verification_status from scheme summary
+      matchesFilter = scheme.legitimacyStatus === "Verified (Government Portal)"
+        || scheme.legitimacyStatus === "Partially Verified";
+    } else if (filter === "closing") {
+      // Only include schemes with an actual deadline within 30 days
+      // Exclude schemes with null/undefined deadline (they don't "close")
+      if (!scheme.deadline) {
+        matchesFilter = false;
+      } else {
+        const deadline = new Date(scheme.deadline);
+        const now = new Date();
+        const threshold = new Date(now.getTime() + CLOSING_SOON_DAYS * 86400000);
+        matchesFilter = !isNaN(deadline.getTime()) && deadline <= threshold && deadline >= now;
+      }
+    }
+
     return matchesSearch && matchesFilter;
   });
 
@@ -63,7 +139,9 @@ export default function ExplorePage() {
   };
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return "Rolling";
     const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "Rolling";
     const now = new Date();
     const diffDays = Math.ceil((d - now) / 86400000);
     if (diffDays < 0) return "Expired";
@@ -103,7 +181,7 @@ export default function ExplorePage() {
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </Link>
-          <div>
+          <div style={{ flex: 1 }}>
             <h1 style={{ fontSize: "1.375rem", fontWeight: 700, color: C.text, lineHeight: 1.2 }}>
               Discover
             </h1>
@@ -111,7 +189,40 @@ export default function ExplorePage() {
               Schemes &amp; opportunities for you
             </p>
           </div>
+          {/* Refresh + last updated */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            <span style={{ fontSize: "0.6rem", color: C.dim, textAlign: "right", maxWidth: 60, lineHeight: 1.2 }}>
+              {formatLastUpdated(lastUpdated)}
+            </span>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: isRefreshing ? "wait" : "pointer",
+                flexShrink: 0,
+                opacity: isRefreshing ? 0.6 : 1,
+              }}
+            >
+              <RefreshCw size={14} color={C.green700} className={isRefreshing ? "animate-spin" : ""} />
+            </button>
+          </div>
         </div>
+
+        {refreshError && (
+          <div style={{ padding: "0 16px 8px", fontSize: "0.75rem", color: "#E08E00", background: "#FFF8E1", borderRadius: 8, margin: "0 16px 8px", padding: "8px 12px" }}>
+            <AlertTriangle size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />
+            {refreshError}
+          </div>
+        )}
 
         {/* Search + Filter */}
         <div style={{ padding: "0 16px 12px", display: "flex", gap: 8 }}>
@@ -308,15 +419,53 @@ export default function ExplorePage() {
         )}
       </div>
 
-      {/* ── Desktop Layout (unchanged) ────────────────────────────────── */}
+      {/* ── Desktop Layout ────────────────────────────────────────────── */}
       <div className="hidden lg:block" style={{ padding: "1.25rem" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ marginBottom: "1.5rem" }}>
-            <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.75rem", fontWeight: 700, color: C.green800 }}>Explore Opportunities</h1>
-            <p style={{ fontSize: "0.9rem", color: C.muted, marginTop: 6, maxWidth: 640 }}>
-              Personalized schemes for {user?.name || "your profile"} — {user?.state}, {user?.education}, {user?.category}, income {user?.incomeRange || "on file"}.
-            </p>
+          <div style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.75rem", fontWeight: 700, color: C.green800 }}>Explore Opportunities</h1>
+              <p style={{ fontSize: "0.9rem", color: C.muted, marginTop: 6, maxWidth: 640 }}>
+                Personalized schemes for {user?.name || "your profile"} — {user?.state}, {user?.education}, {user?.category}, income {user?.incomeRange || "on file"}.
+              </p>
+            </div>
+            {/* Refresh + last updated */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginTop: 4 }}>
+              <span style={{ fontSize: "0.7rem", color: C.dim, textAlign: "right" }}>
+                Last updated: {formatLastUpdated(lastUpdated)}
+              </span>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "0.4rem 0.75rem",
+                  borderRadius: 9999,
+                  border: `1px solid ${C.border}`,
+                  background: C.surface,
+                  color: C.green700,
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  cursor: isRefreshing ? "wait" : "pointer",
+                  fontFamily: "inherit",
+                  opacity: isRefreshing ? 0.6 : 1,
+                }}
+              >
+                <RefreshCw size={13} className={isRefreshing ? "animate-spin" : ""} />
+                Refresh
+              </button>
+            </div>
           </div>
+
+          {refreshError && (
+            <div style={{ marginBottom: "1rem", fontSize: "0.8rem", color: "#E08E00", background: "#FFF8E1", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+              <AlertTriangle size={14} />
+              {refreshError}
+            </div>
+          )}
 
           {/* Search & filters */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.5rem" }}>
@@ -347,21 +496,41 @@ export default function ExplorePage() {
                 <div key={scheme.id} className="scheme-card" style={{ opacity: isEligibleMatch ? 1 : 0.65, display: "flex", flexDirection: "column" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                     <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: C.dim }}>{scheme.department}</span>
-                    <span style={{ fontSize: "0.65rem", fontWeight: 700, color: C.green700, background: C.green50, border: `1px solid ${C.border}`, padding: "2px 8px", borderRadius: 9999 }}>{scheme.legitimacyStatus}</span>
+                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                      {/* Match indicator */}
+                      {scheme.eligibility_status && (
+                        <span style={{ fontSize: "0.6rem", fontWeight: 700, padding: "2px 6px", borderRadius: 9999, background: scheme.eligibility_status === "eligible" ? C.green50 : scheme.eligibility_status === "insufficient_information" ? "#FFF8E1" : "#FFEBEE", color: scheme.eligibility_status === "eligible" ? C.green700 : scheme.eligibility_status === "insufficient_information" ? "#E08E00" : "#C62828", border: `1px solid ${scheme.eligibility_status === "eligible" ? C.border : scheme.eligibility_status === "insufficient_information" ? "#FFE082" : "#FFCDD2"}` }}>
+                          {scheme.eligibility_status === "eligible" ? "Strong match" : scheme.eligibility_status === "insufficient_information" ? "Needs info" : "Not a match"}
+                        </span>
+                      )}
+                      <span style={{ fontSize: "0.65rem", fontWeight: 700, color: C.green700, background: C.green50, border: `1px solid ${C.border}`, padding: "2px 8px", borderRadius: 9999 }}>{scheme.legitimacyStatus}</span>
+                    </div>
                   </div>
                   <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: C.text, lineHeight: 1.35 }}>{scheme.name}</h3>
                   <div style={{ marginTop: 10, padding: "0.625rem", background: C.green50, borderRadius: "0.625rem", border: `1px solid ${C.border}` }}>
                     <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: C.green700 }}>Benefit</span>
                     <p style={{ fontSize: "0.82rem", fontWeight: 600, color: C.text, marginTop: 4 }}>{scheme.benefit}</p>
                   </div>
-                  <div style={{ marginTop: 10, borderLeft: `3px solid ${C.green400}`, paddingLeft: 10 }}>
-                    <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: C.dim }}>Why relevant</span>
-                    <p style={{ fontSize: "0.78rem", color: C.muted, marginTop: 4, fontStyle: "italic" }}>{scheme.whyRelevant}</p>
-                  </div>
+                  {/* Match reasons when personalized */}
+                  {scheme.match_reasons && scheme.match_reasons.length > 0 && (
+                    <div style={{ marginTop: 10, borderLeft: `3px solid ${scheme.eligibility_status === "eligible" ? C.green400 : scheme.eligibility_status === "insufficient_information" ? "#FFE082" : "#FFCDD2"}`, paddingLeft: 10 }}>
+                      <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: C.dim }}>Why this matches</span>
+                      {scheme.match_reasons.map((reason, idx) => (
+                        <p key={idx} style={{ fontSize: "0.75rem", color: C.muted, marginTop: 2 }}>{reason}</p>
+                      ))}
+                    </div>
+                  )}
+                  {/* Fallback: static why relevant */}
+                  {!scheme.match_reasons && (
+                    <div style={{ marginTop: 10, borderLeft: `3px solid ${C.green400}`, paddingLeft: 10 }}>
+                      <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: C.dim }}>Why relevant</span>
+                      <p style={{ fontSize: "0.78rem", color: C.muted, marginTop: 4, fontStyle: "italic" }}>{scheme.whyRelevant}</p>
+                    </div>
+                  )}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}`, fontSize: "0.78rem" }}>
                     <div>
                       <span style={{ color: C.dim, fontWeight: 600, display: "block" }}>Deadline</span>
-                      <span style={{ fontWeight: 700, color: C.text }}>{new Date(scheme.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                      <span style={{ fontWeight: 700, color: C.text }}>{scheme.deadline ? new Date(scheme.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Rolling"}</span>
                     </div>
                     <div>
                       <span style={{ color: C.dim, fontWeight: 600, display: "block" }}>Documents</span>

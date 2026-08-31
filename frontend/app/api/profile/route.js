@@ -103,3 +103,29 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid profile payload" }, { status: 400 });
   }
 }
+
+/**
+ * PUT /api/profile — update an existing user profile.
+ */
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const backendBody = toBackendProfile(body);
+
+    if (!backendBody.user_id) {
+      return NextResponse.json({ error: "user_id is required" }, { status: 400 });
+    }
+
+    const result = await backendRequest("/api/profile", {
+      method: "PUT",
+      body: JSON.stringify(backendBody),
+    });
+
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
+    return NextResponse.json(toFrontendProfile(result.data));
+  } catch (error) {
+    return NextResponse.json({ error: "Invalid profile payload" }, { status: 400 });
+  }
+}

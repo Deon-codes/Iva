@@ -1,12 +1,13 @@
-"""POST /api/profile · GET /api/profile — user profile management."""
+"""POST /api/profile · GET /api/profile · PUT /api/profile — user profile management."""
 
 from __future__ import annotations
 
 import logging
+from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.models.user import UserProfile, UserProfileCreate
+from app.models.user import UserProfile, UserProfileCreate, UserProfileUpdate
 from app.services import firestore_service as fs
 
 router = APIRouter(prefix="/api", tags=["profile"])
@@ -20,6 +21,17 @@ async def create_profile(body: UserProfileCreate) -> UserProfile:
     Profile data (state, income, caste, education) is used by the Discovery Agent for eligibility matching.
     """
     data = body.model_dump(exclude={"user_id"})
+    saved = await fs.upsert_user(body.user_id, data)
+    return UserProfile(**saved)
+
+
+@router.put("/profile", response_model=UserProfile, summary="Update an existing user profile")
+async def update_profile(body: UserProfileCreate) -> UserProfile:
+    """
+    Update the authenticated user's profile. Accepts the full profile shape.
+    Only non-None fields are updated (partial update semantics).
+    """
+    data = body.model_dump(exclude={"user_id"}, exclude_none=True)
     saved = await fs.upsert_user(body.user_id, data)
     return UserProfile(**saved)
 
