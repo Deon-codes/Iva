@@ -22,7 +22,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 LEGITIMACY_SYSTEM_PROMPT = """
-You are the Hazela Legitimacy Agent, a specialist in identifying fraudulent government scheme scams.
+You are the Iva Legitimacy Agent, a specialist in identifying fraudulent government scheme scams.
 
 A deterministic rule engine has already evaluated the scheme and produced a verdict.
 Your ONLY job is to explain this verdict clearly to the user in plain, simple language.

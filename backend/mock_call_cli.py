@@ -15,7 +15,7 @@ client = TestClient(app)
 
 def run_mock_cli():
     print("==================================================================")
-    print("            HAZELA VOICE IVR TELEPHONY CLIENT SIMULATION          ")
+    print("            IVA VOICE IVR TELEPHONY CLIENT SIMULATION          ")
     print("                      [DEVELOPMENT & MOCK MODE]                   ")
     print("==================================================================")
     print("This is a CLI simulation tool. It routes inputs to the mock voice")

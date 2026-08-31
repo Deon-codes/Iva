@@ -103,7 +103,7 @@ export default function LoginPage() {
     setSubmitting(true);
     const mockUser = {
       uid: "demo-user",
-      email: "demo@hazela.local",
+      email: "demo@iva.local",
       name: "Aarav Sharma",
       phone: "+91 98765 43210",
       state: "Maharashtra",
@@ -116,7 +116,7 @@ export default function LoginPage() {
     };
     // Store in localStorage so AppContext picks it up via onAuthStateChanged
     // For demo mode we'll use a flag and push directly
-    localStorage.setItem("hazela_user", JSON.stringify(mockUser));
+    localStorage.setItem("iva_user", JSON.stringify(mockUser));
     // Use router push directly for demo mode
     router.push("/chat");
   };
@@ -262,7 +262,7 @@ export default function LoginPage() {
                 className="inline-block font-serif font-extrabold hover:opacity-80 transition-opacity"
                 style={{ ...SERIF, fontSize: "1.875rem", color: "#1B5E20", lineHeight: 1.2 }}
               >
-                hazela
+                Iva
               </a>
               <h1
                 className="font-bold"

@@ -71,7 +71,7 @@ export function AppProvider({ children }) {
       } else {
         // No Firebase user — check localStorage for demo-mode session
         try {
-          const stored = localStorage.getItem("hazela_user");
+          const stored = localStorage.getItem("iva_user");
           if (stored) {
             setUser(JSON.parse(stored));
           } else {
@@ -156,7 +156,7 @@ export function AppProvider({ children }) {
       if (res.ok) {
         const session = await res.json();
         setSessionId(session.id);
-        try { localStorage.setItem("hazela_session_id", session.id); } catch {}
+        try { localStorage.setItem("iva_session_id", session.id); } catch {}
         // Convert backend messages to frontend format
         const history = (session.messages || []).map((m) => ({
           id: `msg-${m.role}-${Date.now()}-${Math.random()}`,
@@ -178,7 +178,7 @@ export function AppProvider({ children }) {
     setChatHistory([]);
     setLastMessage(null);
     setAgentState("Neutral");
-    try { localStorage.removeItem("hazela_session_id"); } catch {}
+    try { localStorage.removeItem("iva_session_id"); } catch {}
   }, []);
 
   // ─── Profile Persistence (localStorage) ───────────────────────────────────
@@ -186,7 +186,7 @@ export function AppProvider({ children }) {
   // Also persists chat session for continuity.
   function getStoredProfile(uid) {
     try {
-      const raw = localStorage.getItem(`hazela_profile_${uid}`);
+      const raw = localStorage.getItem(`iva_profile_${uid}`);
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
@@ -195,7 +195,7 @@ export function AppProvider({ children }) {
 
   function saveStoredProfile(uid, profile) {
     try {
-      localStorage.setItem(`hazela_profile_${uid}`, JSON.stringify(profile));
+      localStorage.setItem(`iva_profile_${uid}`, JSON.stringify(profile));
     } catch {
       // localStorage may be full or disabled — non-critical
     }
@@ -203,7 +203,7 @@ export function AppProvider({ children }) {
 
   function removeStoredProfile(uid) {
     try {
-      localStorage.removeItem(`hazela_profile_${uid}`);
+      localStorage.removeItem(`iva_profile_${uid}`);
     } catch {
       // ignore
     }
@@ -325,8 +325,8 @@ export function AppProvider({ children }) {
     // Clear local app state
     if (user?.uid) removeStoredProfile(user.uid);
     try {
-      localStorage.removeItem("hazela_user");
-      localStorage.removeItem("hazela_session_id");
+      localStorage.removeItem("iva_user");
+      localStorage.removeItem("iva_session_id");
     } catch { /* ignore */ }
     setUser(null);
     fetchedRef.current = false;
@@ -435,7 +435,7 @@ export function AppProvider({ children }) {
         // Store session_id from backend for continuity across messages
         if (data.session_id) {
           setSessionId(data.session_id);
-          try { localStorage.setItem("hazela_session_id", data.session_id); } catch {}
+          try { localStorage.setItem("iva_session_id", data.session_id); } catch {}
         }
 
         // Map actions for display
@@ -663,7 +663,7 @@ export function AppProvider({ children }) {
             body: JSON.stringify({
               user_id: uid,
               name: "Demo User",
-              email: "demo@hazela.app",
+              email: "demo@iva.app",
               state: "Maharashtra",
               age: 22,
               annual_income_inr: 500000,

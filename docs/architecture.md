@@ -1,4 +1,4 @@
-# Hazela Architecture & Shared Contracts
+# Iva Architecture & Shared Contracts
 
 This document contains the shared contract for all feature branches. Any modifications to this file must be reviewed and approved by the team lead and merged via a small, fast-tracked PR.
 
@@ -106,7 +106,7 @@ This document contains the shared contract for all feature branches. Any modific
 - **Response:** XML Content-Type (TwiML response)
   ```xml
   <Response>
-      <Say>Connecting to Hazela voice core...</Say>
+      <Say>Connecting to Iva voice core...</Say>
   </Response>
   ```
 
@@ -116,7 +116,7 @@ This document contains the shared contract for all feature branches. Any modific
   ```json
   {
     "to_phone_number": "+1234567890",
-    "message": "Greetings from Hazela"
+    "message": "Greetings from Iva"
   }
   ```
 - **Response:**
@@ -136,7 +136,7 @@ This document contains the shared contract for all feature branches. Any modific
   {
     "document_id": "doc_xyz789",
     "filename": "tax_return.pdf",
-    "url": "https://storage.googleapis.com/hazela-bucket/tax_return.pdf",
+    "url": "https://storage.googleapis.com/iva-bucket/tax_return.pdf",
     "status": "PENDING_VERIFICATION",
     "created_at": "2026-08-23T22:55:00Z"
   }
@@ -219,7 +219,7 @@ from typing import Dict, Any
 
 class BaseAgent(ABC):
     """
-    Abstract interface for Hazela AI Agent Core.
+    Abstract interface for Iva AI Agent Core.
     All agent implementations must conform to this contract.
     """
 
@@ -268,12 +268,12 @@ class BaseAgent(ABC):
 | :--- | :--- | :--- |
 | `PORT` | Local server port for FastAPI backend | `8000` |
 | `HOST` | Bind address for FastAPI backend | `0.0.0.0` |
-| `FIRESTORE_PROJECT_ID` | Project ID for Firebase/Firestore databases | `hazela-dev-project` |
+| `FIRESTORE_PROJECT_ID` | Project ID for Firebase/Firestore databases | `iva-dev-project` |
 | `GOOGLE_APPLICATION_CREDENTIALS` | Absolute path to Google Service Account JSON key file | `C:\keys\gcp-service.json` |
 | `OPENAI_API_KEY` | Secret API key for OpenAI LLM services | `sk-proj-4929...` |
 | `AGENT_MODEL_NAME` | Model choice for LLM generation | `gpt-4-turbo` or `gpt-4o` |
 | `TWILIO_ACCOUNT_SID` | SID for Twilio integration | `AC1234567890abcdef` |
 | `TWILIO_AUTH_TOKEN` | Auth token for Twilio voice integrations | `auth_token_secret_123` |
 | `TWILIO_PHONE_NUMBER` | Twilio phone number for outbound calls | `+15017122661` |
-| `DOCUMENT_BUCKET_NAME` | Google Cloud Storage bucket for PDF/image uploads | `hazela-uploads-prod` |
+| `DOCUMENT_BUCKET_NAME` | Google Cloud Storage bucket for PDF/image uploads | `iva-uploads-prod` |
 | `CRON_JOB_INTERVAL_SECONDS` | Run interval for background status jobs | `300` |

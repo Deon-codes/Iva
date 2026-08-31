@@ -28,7 +28,7 @@ def _is_retryable_error(exc: Exception) -> bool:
     return any(p in exc_str for p in retryable)
 
 
-class HazelaRunner:
+class IvaRunner:
     """
     Wraps the Google ADK Runner with session management.
     Constructed once at app startup and shared across requests.
@@ -70,7 +70,7 @@ class HazelaRunner:
 
                 self._runner = Runner(
                     agent=self._orchestrator,
-                    app_name="hazela",
+                    app_name="iva",
                     session_service=self._session_service,
                 )
                 logger.info("ADK Runner initialised with model=%s", model_name)
@@ -212,7 +212,7 @@ class HazelaRunner:
 
             # Build a system prompt for Grok
             system_prompt = (
-                "You are Hazela, an AI assistant that helps Indian citizens discover "
+                "You are Iva, an AI assistant that helps Indian citizens discover "
                 "government schemes and scholarships. You are currently operating in "
                 "limited mode without access to the full scheme database. "
                 "Provide helpful general guidance about Indian government scholarships "
@@ -264,11 +264,11 @@ class HazelaRunner:
 
         # Ensure session exists
         session = await self._session_service.get_session(
-            app_name="hazela", user_id=user_id, session_id=session_id
+            app_name="iva", user_id=user_id, session_id=session_id
         )
         if session is None:
             session = await self._session_service.create_session(
-                app_name="hazela", user_id=user_id, session_id=session_id, state={}
+                app_name="iva", user_id=user_id, session_id=session_id, state={}
             )
 
         user_content = Content(role="user", parts=[Part(text=message)])
@@ -323,4 +323,4 @@ class HazelaRunner:
 
 
 # Singleton — imported by dependencies.py
-hazela_runner = HazelaRunner()
+iva_runner = IvaRunner()

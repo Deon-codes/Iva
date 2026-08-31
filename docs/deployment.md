@@ -1,4 +1,4 @@
-# Hazela — Cloud Run Deployment Guide
+# Iva — Cloud Run Deployment Guide
 
 ## Prerequisites
 
@@ -31,11 +31,11 @@ gcloud services enable \
 ```bash
 # Gemini API Key
 echo -n "your-gemini-api-key" | \
-  gcloud secrets create hazela-gemini-key --data-file=-
+  gcloud secrets create iva-gemini-key --data-file=-
 
 # GCP Project ID
 echo -n "$PROJECT_ID" | \
-  gcloud secrets create hazela-gcp-project --data-file=-
+  gcloud secrets create iva-gcp-project --data-file=-
 ```
 
 ## Step 2 — Create Firestore Database
@@ -49,44 +49,44 @@ gcloud firestore databases create \
 ## Step 3 — Create Service Account for Cloud Run
 
 ```bash
-gcloud iam service-accounts create hazela-run-sa \
-  --display-name="Hazela Cloud Run Service Account"
+gcloud iam service-accounts create iva-run-sa \
+  --display-name="Iva Cloud Run Service Account"
 
 # Grant Firestore access
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:hazela-run-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+  --member="serviceAccount:iva-run-sa@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/datastore.user"
 
 # Grant Secret Manager access
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:hazela-run-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+  --member="serviceAccount:iva-run-sa@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
 
 # Grant Pub/Sub access
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:hazela-run-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+  --member="serviceAccount:iva-run-sa@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/pubsub.publisher"
 ```
 
 ## Step 4 — Build & Deploy (Manual)
 
 ```bash
-cd Hazela_codes
+cd Iva_codes
 
 # Build image
-docker build -t gcr.io/$PROJECT_ID/hazela-agent-core:latest -f backend/Dockerfile backend/
+docker build -t gcr.io/$PROJECT_ID/iva-agent-core:latest -f backend/Dockerfile backend/
 
 # Push to GCR
-docker push gcr.io/$PROJECT_ID/hazela-agent-core:latest
+docker push gcr.io/$PROJECT_ID/iva-agent-core:latest
 
 # Deploy to Cloud Run
-gcloud run deploy hazela-agent-core \
-  --image=gcr.io/$PROJECT_ID/hazela-agent-core:latest \
+gcloud run deploy iva-agent-core \
+  --image=gcr.io/$PROJECT_ID/iva-agent-core:latest \
   --region=asia-south1 \
   --platform=managed \
   --allow-unauthenticated \
-  --service-account=hazela-run-sa@$PROJECT_ID.iam.gserviceaccount.com \
-  --set-secrets="GEMINI_API_KEY=hazela-gemini-key:latest,GOOGLE_CLOUD_PROJECT=hazela-gcp-project:latest" \
+  --service-account=iva-run-sa@$PROJECT_ID.iam.gserviceaccount.com \
+  --set-secrets="GEMINI_API_KEY=iva-gemini-key:latest,GOOGLE_CLOUD_PROJECT=iva-gcp-project:latest" \
   --set-env-vars="ENVIRONMENT=production,FIRESTORE_DATABASE_ID=(default)" \
   --min-instances=0 \
   --max-instances=3 \
@@ -105,7 +105,7 @@ gcloud builds submit --config=backend/cloudbuild.yaml .
 
 ```bash
 # Get the service URL
-SERVICE_URL=$(gcloud run services describe hazela-agent-core \
+SERVICE_URL=$(gcloud run services describe iva-agent-core \
   --region=asia-south1 --format='value(status.url)')
 
 # Health check
@@ -120,11 +120,11 @@ curl -X POST $SERVICE_URL/api/chat \
 ## Step 7 — Pub/Sub Topic for Person 4
 
 ```bash
-gcloud pubsub topics create hazela-status-check
+gcloud pubsub topics create iva-status-check
 
 # Grant Person 4's service account subscription rights
-gcloud pubsub topics add-iam-policy-binding hazela-status-check \
-  --member="serviceAccount:hazela-run-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+gcloud pubsub topics add-iam-policy-binding iva-status-check \
+  --member="serviceAccount:iva-run-sa@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/pubsub.publisher"
 ```
 
@@ -143,7 +143,7 @@ gcloud pubsub topics add-iam-policy-binding hazela-status-check \
 | `GOOGLE_CLOUD_PROJECT` | Secret Manager → `--set-secrets` | GCP project ID |
 | `ENVIRONMENT` | `--set-env-vars` | `production` |
 | `FIRESTORE_DATABASE_ID` | `--set-env-vars` | `(default)` |
-| `PUBSUB_TOPIC` | `--set-env-vars` | `hazela-status-check` |
+| `PUBSUB_TOPIC` | `--set-env-vars` | `iva-status-check` |
 | `GOOGLE_APPLICATION_CREDENTIALS` | Not needed in Cloud Run | Cloud Run uses workload identity |
 
 > **Note**: In Cloud Run, `GOOGLE_APPLICATION_CREDENTIALS` is not needed.

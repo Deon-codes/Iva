@@ -55,7 +55,7 @@ export default function Footer() {
       >
         <img
           src={`/bloub-${bloubState}.svg`}
-          alt="Hazela Bloub"
+          alt="Iva Bloub"
           style={{
             width: "44px",
             height: "44px",
@@ -94,7 +94,7 @@ export default function Footer() {
           </nav>
         </div>
 
-        {/* Center: Hazela Wordmark + Tagline + Actions */}
+        {/* Center: Iva Wordmark + Tagline + Actions */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
           <span
             style={{
@@ -108,7 +108,7 @@ export default function Footer() {
               marginBottom: "0.75rem",
             }}
           >
-            Hazela
+            Iva
           </span>
           <p
             style={{
@@ -210,10 +210,10 @@ export default function Footer() {
         }}
       >
         <p style={{ fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif', fontSize: "0.8125rem", color: "#2E7D32" }}>
-          © 2026 Hazela. All rights reserved.
+          © 2026 Iva. All rights reserved.
         </p>
         <p style={{ fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif', fontSize: "0.8125rem", color: "#2E7D32", maxWidth: "620px", lineHeight: 1.5 }} className="disclaimer-text">
-          Hazela helps you discover, understand, prepare for, and track government schemes and scholarships. Eligibility and approval are ultimately determined by the relevant government department or scheme authority.
+          Iva helps you discover, understand, prepare for, and track government schemes and scholarships. Eligibility and approval are ultimately determined by the relevant government department or scheme authority.
         </p>
       </div>
 

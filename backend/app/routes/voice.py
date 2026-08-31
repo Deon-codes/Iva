@@ -47,7 +47,7 @@ async def voice_incoming(
 
         if session["is_mock"]:
             msg = (
-                "[MOCK SIMULATION] Welcome to the Hazela Mock Voice System. "
+                "[MOCK SIMULATION] Welcome to the Iva Mock Voice System. "
                 "This is a testing simulation and NOT a real government service. "
                 "Aap sarkari yojana aur scholarship ke baare mein kya jaana chahte hain?"
             )
@@ -204,7 +204,7 @@ async def exotel_ws(websocket: WebSocket):
     """
     Exotel Voicebot WebSocket Integration Endpoint.
     Manages live bidirectional binary audio stream, transcribes caller speech,
-    queries Hazela orchestrator, and synthesizes audio responses.
+    queries Iva orchestrator, and synthesizes audio responses.
     """
     await websocket.accept()
     logger.info("EXOTEL WS CONNECTED")
@@ -276,7 +276,7 @@ async def exotel_ws(websocket: WebSocket):
                 
                 # Play greeting immediately
                 if session["is_mock"]:
-                    greeting_text = "[MOCK SIMULATION] Welcome to the Hazela Mock Voice System. This is a testing simulation and NOT a real government service. Aap sarkari yojana aur scholarship ke baare mein kya jaana chahte hain?"
+                    greeting_text = "[MOCK SIMULATION] Welcome to the Iva Mock Voice System. This is a testing simulation and NOT a real government service. Aap sarkari yojana aur scholarship ke baare mein kya jaana chahte hain?"
                 else:
                     greeting_text = "Namaste. Main aapki sarkari yojana aur scholarship application mein madad karne ke liye hoon. Aap kya jaana chahte hain?"
                 
@@ -316,7 +316,7 @@ async def exotel_ws(websocket: WebSocket):
                                         if transcript.strip():
                                             logger.info("EXOTEL TRANSCRIPT: %s", transcript)
                                             response_text = await voice_service.process_utterance(stream_sid, transcript)
-                                            logger.info("HAZELA RESPONSE: %s", response_text)
+                                            logger.info("IVA RESPONSE: %s", response_text)
                                             
                                             response_audio = await speech_service.synthesize_text(
                                                 response_text,

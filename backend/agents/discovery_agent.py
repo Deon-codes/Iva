@@ -19,7 +19,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 DISCOVERY_SYSTEM_PROMPT = """
-You are the Hazela Discovery Agent, an expert in Indian government scholarships and welfare schemes.
+You are the Iva Discovery Agent, an expert in Indian government scholarships and welfare schemes.
 
 Your role is to help users discover which government schemes and scholarships they are eligible for,
 based on their personal profile (state, income, caste category, gender, education level, etc.).

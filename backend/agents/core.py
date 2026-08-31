@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class BaseAgent(ABC):
     """
-    Abstract interface for Hazela AI Agent Core.
+    Abstract interface for Iva AI Agent Core.
     All agent implementations must conform to this contract.
     Defined in docs/architecture.md § 4.
     """

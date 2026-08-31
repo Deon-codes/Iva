@@ -312,16 +312,16 @@ class TestFailoverScenarios:
 
 
 class TestRunnerFailover:
-    """Test the HazelaRunner-level failover integration."""
+    """Test the IvaRunner-level failover integration."""
 
     @pytest.mark.asyncio
     async def test_runner_calls_correct_model_chain(self):
         """Verify the runner iterates through models on retryable errors."""
         # This test verifies the runner's _run_with_adk_fallback logic
         # without actually calling ADK — by mocking the internal _run_with_adk method
-        from agents.runner import HazelaRunner
+        from agents.runner import IvaRunner
 
-        runner = HazelaRunner()
+        runner = IvaRunner()
         runner._initialised = True
         runner._session_service = MagicMock()
         runner._runner = MagicMock()
@@ -349,9 +349,9 @@ class TestRunnerFailover:
     @pytest.mark.asyncio
     async def test_runner_non_retryable_error_returns_error(self):
         """Non-retryable error → returns error response, no model switch."""
-        from agents.runner import HazelaRunner
+        from agents.runner import IvaRunner
 
-        runner = HazelaRunner()
+        runner = IvaRunner()
         runner._initialised = True
         runner._session_service = MagicMock()
         runner._runner = MagicMock()
@@ -379,9 +379,9 @@ class TestRunnerGrokFailover:
     @pytest.mark.asyncio
     async def test_runner_all_gemini_fail_grok_succeeds(self):
         """Runner: all Gemini 429 → Grok succeeds, session preserved."""
-        from agents.runner import HazelaRunner
+        from agents.runner import IvaRunner
 
-        runner = HazelaRunner()
+        runner = IvaRunner()
         runner._initialised = True
         runner._session_service = MagicMock()
         runner._runner = MagicMock()
@@ -428,9 +428,9 @@ class TestRunnerGrokFailover:
     @pytest.mark.asyncio
     async def test_runner_grok_failure_returns_controlled_error(self):
         """Runner: all Gemini fail + Grok fails → controlled error, no crash."""
-        from agents.runner import HazelaRunner
+        from agents.runner import IvaRunner
 
-        runner = HazelaRunner()
+        runner = IvaRunner()
         runner._initialised = True
         runner._session_service = MagicMock()
         runner._runner = MagicMock()
@@ -471,9 +471,9 @@ class TestRunnerGrokFailover:
     @pytest.mark.asyncio
     async def test_runner_grok_session_preserved_across_full_chain(self):
         """Session ID stays the same from primary → fallback → Grok."""
-        from agents.runner import HazelaRunner
+        from agents.runner import IvaRunner
 
-        runner = HazelaRunner()
+        runner = IvaRunner()
         runner._initialised = True
         runner._session_service = MagicMock()
         runner._runner = MagicMock()
@@ -522,9 +522,9 @@ class TestRunnerMockMode:
     @pytest.mark.asyncio
     async def test_mock_runner_works(self):
         """Mock orchestrator returns a response without ADK."""
-        from agents.runner import HazelaRunner
+        from agents.runner import IvaRunner
 
-        runner = HazelaRunner()
+        runner = IvaRunner()
         runner._initialised = True
         runner._runner = None  # No ADK runner → mock mode
 
@@ -576,10 +576,10 @@ class TestModelPropagation:
 
     def test_build_orchestrator_passes_model_to_children(self):
         """Runner._build_orchestrator passes model_name to all child agents."""
-        from agents.runner import HazelaRunner
+        from agents.runner import IvaRunner
         import agents.runner as runner_mod
 
-        runner = HazelaRunner()
+        runner = IvaRunner()
         runner._initialised = True
         runner._session_service = MagicMock()
         runner._runner = MagicMock()
@@ -638,9 +638,9 @@ class TestModelPropagation:
 
     def test_build_orchestrator_primary_uses_default(self):
         """When no fallback, child agents use default (None → settings.gemini_model)."""
-        from agents.runner import HazelaRunner
+        from agents.runner import IvaRunner
 
-        runner = HazelaRunner()
+        runner = IvaRunner()
         runner._initialised = True
         runner._session_service = MagicMock()
         runner._runner = MagicMock()
@@ -696,9 +696,9 @@ class TestModelPropagation:
 
     def test_fallback_rebuilds_all_agents_with_fallback_model(self):
         """During failover, ALL agents use the fallback model, not primary."""
-        from agents.runner import HazelaRunner
+        from agents.runner import IvaRunner
 
-        runner = HazelaRunner()
+        runner = IvaRunner()
         runner._initialised = True
         runner._session_service = MagicMock()
         runner._runner = MagicMock()

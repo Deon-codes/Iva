@@ -59,7 +59,7 @@ def _raw_http_get(path: str, timeout: int = 15) -> Optional[Dict[str, Any]]:
         f"GET {path} HTTP/1.1\r\n"
         f"Host: {HOST}\r\n"
         f"Accept: application/json\r\n"
-        f"User-Agent: Hazela/1.0\r\n"
+        f"User-Agent: Iva/1.0\r\n"
         f"Connection: close\r\n"
         f"\r\n"
     )

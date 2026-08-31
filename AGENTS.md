@@ -1,4 +1,4 @@
-# AGENTS.md — Hazela Integration Branch
+# AGENTS.md — Iva Integration Branch
 
 This document consolidates the agent core (Person 1) and frontend (Person 2) ownership.
 

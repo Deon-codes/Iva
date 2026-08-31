@@ -56,7 +56,7 @@ export default function DashboardLayout({ children }) {
       <div style={{ padding: "1.25rem 1.25rem 0.75rem", borderBottom: "1px solid #F0EDE8" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/chat" style={{ fontFamily: "serif", fontWeight: 800, fontSize: "1.5rem", color: "#1B5E20", textDecoration: "none", letterSpacing: "-0.02em" }}>
-            hazela
+            Iva
           </Link>
           {onClose && (
             <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#81C784", lineHeight: 1 }}><X size={18} /></button>
@@ -180,7 +180,7 @@ export default function DashboardLayout({ children }) {
           <span style={{ width: 16, height: 2, background: "#061508", borderRadius: 2, display: "block" }} />
           <span style={{ width: 22, height: 2, background: "#061508", borderRadius: 2, display: "block" }} />
         </button>
-        <Link href="/chat" style={{ fontFamily: "serif", fontWeight: 800, fontSize: "1.25rem", color: "#1B5E20", textDecoration: "none" }}>hazela</Link>
+        <Link href="/chat" style={{ fontFamily: "serif", fontWeight: 800, fontSize: "1.25rem", color: "#1B5E20", textDecoration: "none" }}>Iva</Link>
         <div style={{ display: "flex", alignItems: "center", gap: 8, position: "relative" }}>
           <button onClick={() => setBellOpen(!bellOpen)} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", padding: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Bell size={20} color="#061508" />

@@ -201,7 +201,7 @@ async def check_domain_legitimacy(url: str) -> Dict[str, Any]:
             "verdict": "legitimate",
             "classification": classification,
             "reason": f"Domain is an official source ({classification}): {url}",
-            "reference": "Hazela trusted domain registry",
+            "reference": "Iva trusted domain registry",
         }
     else:
         return {
@@ -243,8 +243,8 @@ async def check_scheme_in_registry(scheme_name: str) -> Dict[str, Any]:
         return {
             "in_registry": True,
             "verdict": "legitimate",
-            "reason": f"'{scheme_name}' is in the Hazela verified scheme registry{source_info}.",
-            "reference": "Hazela scheme registry (sourced from myScheme.gov.in, NSP, and official department sites)",
+            "reason": f"'{scheme_name}' is in the Iva verified scheme registry{source_info}.",
+            "reference": "Iva scheme registry (sourced from myScheme.gov.in, NSP, and official department sites)",
             "canonical_scheme": {
                 "id": db_match["id"],
                 "name": db_match["name"],

@@ -17,7 +17,7 @@ Failover does NOT trigger for:
     - application validation errors
     - programming bugs
 
-The rest of Hazela (Agent Core, tools, session) remains unchanged.
+The rest of Iva (Agent Core, tools, session) remains unchanged.
 Only the model selection and retry logic lives here.
 """
 

@@ -16,11 +16,11 @@ MOCK_VOICE_MODE = os.getenv("MOCK_VOICE_MODE", "false").lower() == "true"
 
 # Try importing the real runner and dependencies
 try:
-    from agents.runner import hazela_runner
+    from agents.runner import iva_runner
     HAS_REAL_RUNNER = True
 except ImportError:
     HAS_REAL_RUNNER = False
-    hazela_runner = None
+    iva_runner = None
 
 
 def detect_language(transcript: str, current_lang: str) -> str:
@@ -159,11 +159,11 @@ class VoiceService:
             return process_mock_message(session, message)
 
         # Real Mode Execution
-        if not HAS_REAL_RUNNER or not hazela_runner:
+        if not HAS_REAL_RUNNER or not iva_runner:
             raise RuntimeError("Real voice orchestrator not available.")
 
         try:
-            result = await hazela_runner.run_agent(
+            result = await iva_runner.run_agent(
                 user_id=session["user_id"],
                 message=message,
                 session_id=session["session_id"]
@@ -173,7 +173,7 @@ class VoiceService:
                 response_text = "Main aapki sahayata nahi kar paaya. Kripya baad mein dobara call karein."
             return response_text
         except Exception as e:
-            logger.error("Error calling real hazela_runner: %s", e)
+            logger.error("Error calling real iva_runner: %s", e)
             raise RuntimeError(f"Failed to communicate with agent orchestrator: {e}")
 
     def clean_session(self, call_sid: str) -> None:

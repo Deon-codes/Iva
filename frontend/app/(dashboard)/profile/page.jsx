@@ -58,7 +58,7 @@ export default function ProfilePage() {
         <h1 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#061508", margin: 0 }}>My Profile</h1>
       </div>
       <p style={{ fontSize: "0.8rem", color: "#81C784", marginBottom: "1.5rem" }}>
-        This information is used by Hazela to match you with relevant government schemes.
+        This information is used by Iva to match you with relevant government schemes.
       </p>
 
       <div style={{ display: "grid", gap: "1rem" }}>

@@ -78,7 +78,7 @@ async def list_schemes(
     source_type: Optional[str] = Query(None, description="Filter: 'curated' for actionable schemes, 'datagov_in' for supporting data, or omit for all"),
 ) -> List[dict]:
     """
-    Return government schemes from the Hazela database.
+    Return government schemes from the Iva database.
     If user_id is provided, includes personalized match scoring and eligibility.
     If source_type is 'curated', only returns the 18 authoritative actionable scheme records.
     """

@@ -1,1 +1,1 @@
-"""Hazela app package."""
+"""Iva app package."""

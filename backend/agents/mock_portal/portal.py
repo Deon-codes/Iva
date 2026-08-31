@@ -56,12 +56,12 @@ async def fill_mock_portal(
         "session_id": session_id,
         "user_id": user_id,
         "scheme_id": scheme_id,
-        "review_url": f"https://mock-portal.hazela.demo/review/{session_id}",
+        "review_url": f"https://mock-portal.iva.demo/review/{session_id}",
         "filled_fields": filled,
         "missing_fields": missing,
         "hard_stop_message": (
             "⚠️ FORM READY FOR REVIEW — NOT SUBMITTED.\n\n"
-            "Hazela has prepared your application form. We stop here intentionally.\n\n"
+            "Iva has prepared your application form. We stop here intentionally.\n\n"
             "To complete your application:\n"
             "1. Review the form details below carefully.\n"
             "2. Visit the official portal at the scheme's official URL.\n"

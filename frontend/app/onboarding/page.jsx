@@ -62,7 +62,7 @@ export default function OnboardingPage() {
 
       <div className="max-w-2xl mx-auto w-full relative z-10">
         <div className="text-center mb-8">
-          <span className="font-display font-bold text-3xl text-ink-950">hazela</span>
+          <span className="font-display font-bold text-3xl text-ink-950">Iva</span>
           <h1 className="mt-4 font-display font-bold text-3xl text-ink-950">
             Tell us about yourself
           </h1>

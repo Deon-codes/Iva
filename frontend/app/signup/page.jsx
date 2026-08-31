@@ -106,7 +106,7 @@ export default function SignupPage() {
     setSubmitting(true);
     const mockUser = {
       uid: "demo-user",
-      email: "demo@hazela.local",
+      email: "demo@iva.local",
       name: "Aarav Sharma",
       phone: "+91 98765 43210",
       state: "Maharashtra",
@@ -117,7 +117,7 @@ export default function SignupPage() {
       age: "21",
       onboardingCompleted: true,
     };
-    localStorage.setItem("hazela_user", JSON.stringify(mockUser));
+    localStorage.setItem("iva_user", JSON.stringify(mockUser));
     router.push("/chat");
   };
 
@@ -196,7 +196,7 @@ export default function SignupPage() {
               href="/"
               className="block text-center md:text-left font-serif font-extrabold text-3xl text-[#1B5E20] hover:opacity-85 transition-opacity mb-1"
             >
-              hazela
+              Iva
             </a>
             <h2
               className="text-center md:text-left text-xl font-bold text-[#0A270D] mb-1"

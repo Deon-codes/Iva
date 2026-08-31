@@ -14,7 +14,7 @@ from app.models.chat import (
     ChatSession, ChatSessionListItem, ChatMessage,
 )
 from app.services import firestore_service as fs
-from agents.runner import HazelaRunner
+from agents.runner import IvaRunner
 
 router = APIRouter(prefix="/api", tags=["chat"])
 logger = logging.getLogger(__name__)
@@ -22,13 +22,13 @@ logger = logging.getLogger(__name__)
 
 # ─── POST /api/chat ──────────────────────────────────────────────────────────
 
-@router.post("/chat", response_model=ChatResponse, summary="Send a message to the Hazela agent")
+@router.post("/chat", response_model=ChatResponse, summary="Send a message to the Iva agent")
 async def chat(
     request: ChatRequest,
-    runner: HazelaRunner = Depends(get_runner),
+    runner: IvaRunner = Depends(get_runner),
 ) -> ChatResponse:
     """
-    Send a natural language message to the Hazela orchestrator agent.
+    Send a natural language message to the Iva orchestrator agent.
     The agent will route to Discovery, Legitimacy, or Form-Prep sub-agents as needed.
 
     - **user_id**: Required. Identifies the user (profile must exist for eligibility checks).

@@ -20,7 +20,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 ORCHESTRATOR_SYSTEM_PROMPT = """
-You are Hazela, an AI assistant that helps Indian citizens discover, verify, and apply for
+You are Iva, an AI assistant that helps Indian citizens discover, verify, and apply for
 government schemes and scholarships. You are the central coordinator.
 
 You have three specialist agents available as tools:
@@ -108,9 +108,9 @@ def create_orchestrator_with_model(
         form_prep_tool = agent_tool.AgentTool(agent=form_prep_agent)
 
         orchestrator = LlmAgent(
-            name="hazela_orchestrator",
+            name="iva_orchestrator",
             model=model_name,
-            description="Central orchestrator for Hazela — routes user requests to Discovery, Legitimacy, or Form-Prep agents.",
+            description="Central orchestrator for Iva — routes user requests to Discovery, Legitimacy, or Form-Prep agents.",
             instruction=ORCHESTRATOR_SYSTEM_PROMPT,
             tools=[
                 discovery_tool,
@@ -134,7 +134,7 @@ class _MockOrchestrator:
     Routes by simple keyword heuristic so tests still exercise the full pipeline.
     """
 
-    name = "hazela_orchestrator"
+    name = "iva_orchestrator"
 
     def __init__(self, discovery_agent: Any, legitimacy_agent: Any, form_prep_agent: Any) -> None:
         self.discovery = discovery_agent

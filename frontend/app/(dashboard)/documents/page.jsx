@@ -152,7 +152,7 @@ export default function DocumentsPage() {
             <div>
               <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.75rem", fontWeight: 700, color: C.green800 }}>Document Vault</h1>
               <p style={{ fontSize: "0.9rem", color: C.muted, marginTop: 6 }}>
-                Your certificates. Hazela uses these to verify eligibility and prepare applications.
+                Your certificates. Iva uses these to verify eligibility and prepare applications.
               </p>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function DocumentsPage() {
               <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "1rem", padding: "3rem", textAlign: "center" }}>
                 <span style={{ display: "flex", justifyContent: "center" }}><FileText size={40} color="#81C784" /></span>
                 <h3 style={{ fontWeight: 700, color: C.green800, marginTop: 12 }}>No documents yet</h3>
-                <p style={{ fontSize: "0.875rem", color: C.muted, marginTop: 6 }}>Upload the documents you use for your applications. Hazela will help identify which ones are required.</p>
+                <p style={{ fontSize: "0.875rem", color: C.muted, marginTop: 6 }}>Upload the documents you use for your applications. Iva will help identify which ones are required.</p>
               </div>
             ) : (
               documents.map((doc) => {

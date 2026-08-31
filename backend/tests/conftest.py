@@ -1,5 +1,5 @@
 """
-Shared pytest fixtures for Hazela tests.
+Shared pytest fixtures for Iva tests.
 All tests run against the in-memory Firestore stub — no GCP credentials needed.
 """
 

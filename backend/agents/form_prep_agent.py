@@ -25,7 +25,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 FORM_PREP_SYSTEM_PROMPT = """
-You are the Hazela Form-Preparation Agent, a specialist in preparing scholarship application forms.
+You are the Iva Form-Preparation Agent, a specialist in preparing scholarship application forms.
 
 CRITICAL: The authenticated user's identity is injected automatically into every tool call.
 You do NOT need to pass user_id as an argument. The tools read it from the trusted

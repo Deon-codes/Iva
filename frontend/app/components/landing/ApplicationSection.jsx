@@ -53,7 +53,7 @@ export default function ApplicationSection() {
               margin: "0 auto 1rem",
             }}
           >
-            Hazela can help organize your application information, identify required documents, keep track of expiry dates, and prepare the repetitive parts of the process.
+            Iva can help organize your application information, identify required documents, keep track of expiry dates, and prepare the repetitive parts of the process.
           </p>
           <p
             style={{
@@ -66,7 +66,7 @@ export default function ApplicationSection() {
               margin: "0 auto",
             }}
           >
-            When something requires you — such as OTP, CAPTCHA, identity verification, or final submission — Hazela stops and hands control back to you.
+            When something requires you — such as OTP, CAPTCHA, identity verification, or final submission — Iva stops and hands control back to you.
           </p>
         </div>
 

@@ -36,7 +36,7 @@ export default function FinalCTA() {
             marginBottom: "2.5rem",
           }}
         >
-          Tell Hazela about yourself and find out what you could apply for.
+          Tell Iva about yourself and find out what you could apply for.
         </p>
 
         {/* CTAs */}

@@ -80,7 +80,7 @@ export default function TrustControlSection() {
               marginBottom: "1.5rem",
             }}
           >
-            Hazela checks scheme information against trusted sources and surfaces warning signs before you continue.
+            Iva checks scheme information against trusted sources and surfaces warning signs before you continue.
           </p>
 
           {/* Highlight box + Bloub, side by side */}

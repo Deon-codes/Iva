@@ -88,7 +88,7 @@ export default function Nav() {
               letterSpacing: "-0.02em",
             }}
           >
-            Hazela
+            Iva
           </a>
         </div>
 
@@ -98,7 +98,7 @@ export default function Nav() {
             tabs={[
               { label: "How it works", href: "#how-it-works" },
               { label: "What you can do", href: "#what-you-can-do" },
-              { label: "Why Hazela", href: "#trust" },
+              { label: "Why Iva", href: "#trust" },
             ]}
             activeIndex={activeIndex}
             onTabSelect={(tab) => scrollToSection(tab.href)}

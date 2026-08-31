@@ -442,7 +442,7 @@ const bentoItems = [
   {
     id: "voice",
     title: "Voice & Phone Assistant",
-    description: "Interact with Hazela using natural voice. Check eligibility, listen to requirements, and get step-by-step guidance.",
+    description: "Interact with Iva using natural voice. Check eligibility, listen to requirements, and get step-by-step guidance.",
     href: "#phone-access",
     theme: "light",
     visual: <VoiceVisual />,

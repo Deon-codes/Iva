@@ -21,7 +21,7 @@ const states = [
     id: "thinking",
     label: "Thinking",
     description: "Working on it.",
-    detail: "Appears while Hazela is processing a request.",
+    detail: "Appears while Iva is processing a request.",
     svg: "/bloub-confused.svg",
     animClass: "bloub-confused",
   },
@@ -87,7 +87,7 @@ export default function BloubPersonality() {
               margin: "0 auto",
             }}
           >
-            Hazela doesn&apos;t just return results. Bloub reflects what&apos;s happening while your agent works.
+            Iva doesn&apos;t just return results. Bloub reflects what&apos;s happening while your agent works.
           </p>
         </div>
 

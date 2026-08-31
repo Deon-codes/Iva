@@ -102,7 +102,7 @@ async def test_create_and_get_document(sample_user):
         "user_id": sample_user["id"],
         "document_type": "income_certificate",
         "filename": "income_cert.pdf",
-        "storage_url": "gs://hazela-test/income_cert.pdf",
+        "storage_url": "gs://iva-test/income_cert.pdf",
         "status": "pending_verification",
     }
     doc = await create_document(doc_data)

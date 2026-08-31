@@ -240,7 +240,7 @@ export default function ApplicationsPage() {
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "1rem", padding: "3rem", textAlign: "center" }}>
             <span style={{ display: "flex", justifyContent: "center" }}><Folder size={40} color="#81C784" /></span>
             <h3 style={{ fontWeight: 700, color: C.green800, marginTop: 12 }}>No applications yet</h3>
-            <p style={{ fontSize: "0.875rem", color: C.muted, marginTop: 6 }}>Choose a scheme and let Hazela prepare the application for you.</p>
+            <p style={{ fontSize: "0.875rem", color: C.muted, marginTop: 6 }}>Choose a scheme and let Iva prepare the application for you.</p>
             <Link href="/explore" style={{ display: "inline-block", marginTop: 20, padding: "0.625rem 1.25rem", background: C.green800, color: "#fff", borderRadius: 9999, fontWeight: 700, fontSize: "0.875rem", textDecoration: "none" }}>
               Explore Schemes
             </Link>

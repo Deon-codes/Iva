@@ -529,22 +529,22 @@ async def get_verification_status():
         },
         "document_vault_ui": {
             "type": "REAL",
-            "owner": "Hazela team",
+            "owner": "Iva team",
             "description": "Document management UI is real",
         },
         "form_preparation": {
             "type": "REAL",
-            "owner": "Hazela team",
+            "owner": "Iva team",
             "description": "Form field mapping from profile + documents is real",
         },
         "scheme_discovery": {
             "type": "REAL",
-            "owner": "Hazela team",
+            "owner": "Iva team",
             "description": "Scheme search, eligibility, and ranking use real government data",
         },
         "voice_notification": {
             "type": "🟡 HANDOFF",
-            "owner": "Hazela team",
+            "owner": "Iva team",
             "description": "Voice/IVR integration handled separately",
         },
     }

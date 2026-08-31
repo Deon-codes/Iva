@@ -160,7 +160,7 @@ def test_create_document(client, sample_user):
         "user_id": sample_user["id"],
         "document_type": "income_certificate",
         "filename": "income_cert.pdf",
-        "storage_url": "gs://hazela-test/income_cert.pdf",
+        "storage_url": "gs://iva-test/income_cert.pdf",
     })
     assert resp.status_code == 201
     doc = resp.json()
@@ -173,7 +173,7 @@ def test_list_documents(client, sample_user):
         "user_id": sample_user["id"],
         "document_type": "aadhaar",
         "filename": "aadhaar.pdf",
-        "storage_url": "gs://hazela-test/aadhaar.pdf",
+        "storage_url": "gs://iva-test/aadhaar.pdf",
     })
     resp = client.get(f"/api/documents?user_id={sample_user['id']}")
     assert resp.status_code == 200

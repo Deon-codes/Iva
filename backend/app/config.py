@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     firestore_database_id: str = "(default)"
 
     # ── Pub/Sub ───────────────────────────────────────────────────────────────
-    pubsub_topic: str = "hazela-status-check"
+    pubsub_topic: str = "iva-status-check"
 
     # ── Data.gov.in ────────────────────────────────────────────────────────────
     data_gov_api_key: str = ""

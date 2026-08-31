@@ -131,9 +131,9 @@ async def test_mock_orchestrator_routes_discovery():
 @pytest.mark.asyncio
 async def test_runner_mock_mode_handles_prepare():
     """Runner in mock mode handles preparation requests."""
-    from agents.runner import HazelaRunner
+    from agents.runner import IvaRunner
 
-    runner = HazelaRunner()
+    runner = IvaRunner()
     runner.initialise()
 
     result = await runner.run_agent(

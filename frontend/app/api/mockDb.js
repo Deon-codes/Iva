@@ -1,4 +1,4 @@
-// In-memory mock database for Hazela API endpoints
+// In-memory mock database for Iva API endpoints
 // This will persist during the session, allowing dynamic updates.
 
 export let mockProfile = {

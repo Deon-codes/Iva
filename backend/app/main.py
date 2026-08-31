@@ -1,5 +1,5 @@
 """
-Hazela — Agentic Government Schemes & Scholarships Platform
+Iva — Agentic Government Schemes & Scholarships Platform
 FastAPI application entry point.
 
 Startup sequence:
@@ -34,13 +34,13 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Hazela starting up (environment=%s)", settings.environment)
+    logger.info("Iva starting up (environment=%s)", settings.environment)
     # Initialise ADK runner once at startup (creates agents, ADK sessions)
-    from agents.runner import hazela_runner
-    hazela_runner.initialise()
+    from agents.runner import iva_runner
+    iva_runner.initialise()
     logger.info("ADK Runner ready.")
     yield
-    logger.info("Hazela shutting down.")
+    logger.info("Iva shutting down.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
 # ─────────────────────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="Hazela API",
+    title="Iva API",
     description=(
         "Agentic platform for discovering, verifying, and applying for Indian government "
         "schemes and scholarships. Built with Gemini + Google ADK for the Google "
@@ -115,7 +115,7 @@ def health_check():
 
 @app.get("/", tags=["system"], include_in_schema=False)
 def root():
-    return {"message": "Hazela API is running. Visit /docs for the API reference."}
+    return {"message": "Iva API is running. Visit /docs for the API reference."}
 
 
 # ─────────────────────────────────────────────────────────────────────────────

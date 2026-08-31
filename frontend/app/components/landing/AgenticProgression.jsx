@@ -59,7 +59,7 @@ export default function AgenticProgression() {
               marginBottom: "1.25rem",
             }}
           >
-            Just tell Hazela about yourself, what you&apos;re looking for, or what you need help with.
+            Just tell Iva about yourself, what you&apos;re looking for, or what you need help with.
           </p>
           <p
             style={{
@@ -84,7 +84,7 @@ export default function AgenticProgression() {
         >
           <img
             src="/convo.gif"
-            alt="Conversational experience with Hazela agent — describe your situation and find relevant schemes"
+            alt="Conversational experience with Iva agent — describe your situation and find relevant schemes"
             style={{
               width: "100%",
               height: "auto",

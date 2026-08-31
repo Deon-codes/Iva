@@ -17,8 +17,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 FROM python:3.12-slim AS runtime
 
 # Security: run as non-root
-RUN groupadd --gid 1001 hazela && \
-    useradd --uid 1001 --gid 1001 --no-create-home hazela
+RUN groupadd --gid 1001 iva && \
+    useradd --uid 1001 --gid 1001 --no-create-home iva
 
 WORKDIR /app
 
@@ -35,7 +35,7 @@ ENV HOST=0.0.0.0
 ENV ENVIRONMENT=production
 
 # Switch to non-root user
-USER hazela
+USER iva
 
 # Health check (Cloud Run calls /health)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \

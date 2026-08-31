@@ -234,9 +234,9 @@ async def test_mock_portal_hard_stop(sample_user):
 
 @pytest.mark.asyncio
 async def test_mock_orchestrator_routes_to_discovery(sample_user):
-    from agents.runner import HazelaRunner
+    from agents.runner import IvaRunner
 
-    runner = HazelaRunner()
+    runner = IvaRunner()
     runner.initialise()
 
     result = await runner.run_agent(
@@ -251,9 +251,9 @@ async def test_mock_orchestrator_routes_to_discovery(sample_user):
 
 @pytest.mark.asyncio
 async def test_mock_orchestrator_routes_to_legitimacy():
-    from agents.runner import HazelaRunner
+    from agents.runner import IvaRunner
 
-    runner = HazelaRunner()
+    runner = IvaRunner()
     runner.initialise()
 
     result = await runner.run_agent(
@@ -271,17 +271,17 @@ async def test_mock_orchestrator_routes_to_legitimacy():
 @pytest.mark.asyncio
 async def test_agent_core_import_succeeds():
     """The canonical import path works."""
-    from agents.runner import hazela_runner, HazelaRunner
-    assert hazela_runner is not None
-    assert isinstance(hazela_runner, HazelaRunner)
-    assert hasattr(hazela_runner, "run_agent")
+    from agents.runner import iva_runner, IvaRunner
+    assert iva_runner is not None
+    assert isinstance(iva_runner, IvaRunner)
+    assert hasattr(iva_runner, "run_agent")
 
 
 @pytest.mark.asyncio
 async def test_run_agent_accepts_documented_args():
     """run_agent() accepts user_id, message, session_id, context."""
-    from agents.runner import hazela_runner
-    result = await hazela_runner.run_agent(
+    from agents.runner import iva_runner
+    result = await iva_runner.run_agent(
         user_id="test_user_interface",
         message="Hello",
         session_id="test_session_123",
@@ -295,8 +295,8 @@ async def test_run_agent_accepts_documented_args():
 @pytest.mark.asyncio
 async def test_run_agent_respects_session_id():
     """When a session_id is provided, it is echoed back."""
-    from agents.runner import hazela_runner
-    result = await hazela_runner.run_agent(
+    from agents.runner import iva_runner
+    result = await iva_runner.run_agent(
         user_id="test_user_session",
         message="Hello",
         session_id="my_custom_session_id",
@@ -307,8 +307,8 @@ async def test_run_agent_respects_session_id():
 @pytest.mark.asyncio
 async def test_run_agent_generates_session_id_when_omitted():
     """When no session_id is given, one is auto-generated."""
-    from agents.runner import hazela_runner
-    result = await hazela_runner.run_agent(
+    from agents.runner import iva_runner
+    result = await iva_runner.run_agent(
         user_id="test_user_no_session",
         message="Hello",
     )
@@ -319,8 +319,8 @@ async def test_run_agent_generates_session_id_when_omitted():
 @pytest.mark.asyncio
 async def test_run_agent_returns_documented_shape():
     """The return dict contains all documented keys."""
-    from agents.runner import hazela_runner
-    result = await hazela_runner.run_agent(
+    from agents.runner import iva_runner
+    result = await iva_runner.run_agent(
         user_id="test_user_shape",
         message="Find me a scholarship",
     )
@@ -336,8 +336,8 @@ async def test_run_agent_returns_documented_shape():
 @pytest.mark.asyncio
 async def test_run_agent_voice_style_call():
     """Simulates how voice_service calls run_agent (without response_text key access)."""
-    from agents.runner import hazela_runner
-    result = await hazela_runner.run_agent(
+    from agents.runner import iva_runner
+    result = await iva_runner.run_agent(
         user_id="usr_telephony_919876543210",
         message="I want to check my application status",
         session_id="voice_call_session_001",
